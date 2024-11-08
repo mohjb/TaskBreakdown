@@ -1,0 +1,137 @@
+<script>
+class Node {
+constructor(parent, objDef) {
+	const t= this	, d=Node.dom 
+	, p=t.parent = (parent || (!t.root&&t.initRoot()))
+	, a= (Array .isArray(objDef ) && objDef ) || (t==root&&Node.MenuItems)
+	, s= (typeof(objDef) ==’string’ && objDef)|| (a&&a[0])|| objDef?.title
+	, m=objDef?.menu || a&&a [1]
+	t.objDef = objDef || a
+	t.createdTime=new Date();
+	t.id=t.createdTime.getTime()
+	t.hde={ e:t.e = d.d(s || ‘ttl’,parent ?.e || parent )
+		, subtasks :d.d( ‘subtasks’ , t.e )
+		, description:d.d( ‘description’ , t.e )
+		, implementation: d.d( ‘implementation’ , t.e )
+		, menu:m&& t.addMenu(m)
+		} // hde
+ } // constructor
+
+initRoot(){
+	const t=this.root=this
+	,b=document.body
+	
+	return b
+	}
+
+	toJsonString(){}
+
+ addMenu(menuItems) {
+	const d=Node.dom,t=this
+	,details = d.c('details', t.e )
+	, summary = d.c('summary', details
+		, { textContent: 'Menu' })
+
+	const ul = d.c('ul', details);
+	menuItems.forEach(item => {
+		if (typeof item === 'string')
+			d.c('li', ul, { textContent: item })
+		else if (Array.isArray(item)) {
+			const [label, children, callbackOrObjDef] = item
+			, li = d.c('li', ul)
+			, subDetails = d.c('details', li)
+			d.c('summary', subDetails, { textContent: label })
+			if (callbackOrObjDef) {
+				if (typeof callbackOrObjDef === 'function')
+					d.createButton('Run', callbackOrObjDef, subDetails)
+				else
+					t.addChild(callbackOrObjDef, subDetails)
+			}
+			if (children)
+				t.addMenu(children, subDetails)
+		} else
+			t.addChild(item, ul)
+	})
+ }
+
+ addChild(objDef) {return new Node(this, objDef)}// ,parent = this.div
+
+ static dom = {
+  c: function createElement(tagName, parent, atrb, chldrn,chldr2) {
+	const e = tagName?.nodeType ? tagName
+		: document.createElement(tagName), d = Node.dom
+	if (atrb) d.atrb(e, atrb)
+	if (chldrn) chldrn?.forEach
+		? chldrn.forEach(c => d.c(c?.n || c, e, c?.atrb, c?.chldrn))
+		: e.appendChild(chldrn?.nodeType ? chldrn : document.createTextNode(chldrn))
+	if (chldr2) chldr2?.forEach
+		? chldr2.forEach(c => d.c(c?.n || c, e, c?.atrb, c?.chldrn))
+		: e.appendChild(chldr2?.nodeType ? chldr2 : document.createTextNode(chldr2))
+	if (parent?.appendChild) parent.appendChild(e)
+	return e
+	}//Node.dom.c
+
+ , atrb: function setAttributesAndProps(elem, atrbs) {
+	Object.keys(atrbs).forEach(
+	k => k == 'classList'
+	? elem[k].add(atrbs[k])
+	: k != 'style' ? elem[k] = atrbs[k])
+	: Object.keys(atrbs[k]).forEach(j => elem.style[j] = atrbs[k][j]) }
+
+, createButton: (label, onClick, parent) => Node.dom.c(
+	'button', parent, { textContent: label, onclick: onClick })
+
+,fs:(title,parent,chldrn)=>Node.dom.c(‘fieldset’,parent,0
+	,Node.dom.c(‘legend’,0,{textContent:title}),chldrn)
+
+,d:(title,parent,children)=>Node.dom.c(‘details’,parent,0
+	,Node.dom.c(‘summary’,0,{textContent:title}),chldrn)
+ } // static dom
+
+ static MenuItems=[
+	[‘Clipboard menu’,[
+		‘Duplicate’
+		,’Cut’
+		,’Paste as subtasks’
+		,[’Multi-select’,[
+			‘Add to multi-select’
+			,’Remove from multi-select’]]
+		,[‘Position’,[
+			’Reset’
+			,’Set’
+			,’Drag’]]
+		,[‘Json’,[
+			‘toJsonString’
+			,’New subtasks from json’
+			,’Textarea’]]
+	] // Clipboard
+	,[’New Subtask’,0,function(node){
+		const d=Node.dom,
+		if()
+		}]
+	,[‘Appearance menu’,[
+		[‘Border’,[
+			‘Background color‘
+			,’Stroke color’
+			,’Stroke width’
+			,’Corners radius’]]
+		,[‘Text’,[
+			‘Color’
+			,’Font’
+			,’Size’]]
+	] // Appearance
+	,[‘Description menu’,[
+		‘Add description text’
+		,’Set description category’
+		,’Add link’
+		,’Set desc location’]]
+	,[‘Implementation modules menu’,[
+		‘Add source code module’
+		,’Delete module’
+		,’Set programming language of module’
+		,’Set tech stack’]]
+ ] // MenuItems
+
+static root=onload=new Node()
+} // class Node
+</script>
