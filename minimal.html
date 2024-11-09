@@ -4,7 +4,7 @@ class Node {
 	const t= this	, d=Node.dom 
 	, p=t.parent = (parent || (!Node.root&&t.initRoot()))
 	, a= (Array .isArray(objDef ) && objDef ) || Node.MenuItems // (!Node.root&&Node.MenuItems)
-	, s= (typeof(objDef) =='string' && objDef)|| (a&&a[0])|| objDef?.title
+	, s= (typeof(objDef) =='string' && objDef)|| objDef?.title ||(t==Node.root&&'Root')//|| (a&&a[0])
 	, m=objDef?.menu || a//&&a [1]
 	t.objDef = objDef || a
 	t.id=(t.createdTime=new Date()).getTime()
@@ -12,12 +12,12 @@ class Node {
 		if(!p.subtasks)
 			parent.subtasks=[]
 		parent.subtasks.push(t)	}
-	t.hde={ e:t.e = d.d(s || 'ttl'
+	t.hde={ e:t.e = d.fs(s || 'ttl'
 			,parent?.hde?.subtasks || 
 				parent ?.e || p )
-		, subtasks :d.d( 'subtasks' , t.e )
-		, description:d.d( 'description' , t.e )
-		, implementation: d.d( 'implementation' , t.e )
+		, subtasks :d.fs( 'subtasks' , t.e )
+		, description:d.fs( 'description' , t.e )
+		, implementation: d.fs( 'implementation' , t.e )
 		, menu:m&& t.createMenu(m,t.e)
 		} // hde
  } // constructor
@@ -166,3 +166,29 @@ static onLoad=onload=()=>new Node()
 } // class Node
 
 </script>
+<style>
+	body , svg , canvas {padding:5px;
+		linear-gradient(160deg
+			,rgba(2,0,36,0.6979166666666667) 0%
+			,rgba(9,9,121,0.39539565826330536) 35%
+			,rgba(0,212,255,0.43461134453781514) 100%);
+		touch-action: all
+		}
+
+	details,summary,fieldset{
+		border:1px solid blue;
+		border-radius:5px;
+		padding:5px;
+		margin:15px;
+		background-color: #a0d3ff57;}
+details{display:inline}
+
+	summary,legend{
+		display: inline;
+		background-color: #f5f589b8 ;
+		margin-top: 0px;
+		margin-left: 0px;
+	}
+	
+</style>
+
