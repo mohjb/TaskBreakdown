@@ -1,60 +1,93 @@
 <script>
 class Node {
-constructor(parent, objDef) {
+ constructor(parent, objDef) {
 	const t= this	, d=Node.dom 
-	, p=t.parent = (parent || (!t.root&&t.initRoot()))
-	, a= (Array .isArray(objDef ) && objDef ) || (t==root&&Node.MenuItems)
-	, s= (typeof(objDef) ==’string’ && objDef)|| (a&&a[0])|| objDef?.title
-	, m=objDef?.menu || a&&a [1]
+	, p=t.parent = (parent || (!Node.root&&t.initRoot()))
+	, a= (Array .isArray(objDef ) && objDef ) || Node.MenuItems // (!Node.root&&Node.MenuItems)
+	, s= (typeof(objDef) =='string' && objDef)|| (a&&a[0])|| objDef?.title
+	, m=objDef?.menu || a//&&a [1]
 	t.objDef = objDef || a
-	t.createdTime=new Date();
-	t.id=t.createdTime.getTime()
-	t.hde={ e:t.e = d.d(s || ‘ttl’,parent ?.e || parent )
-		, subtasks :d.d( ‘subtasks’ , t.e )
-		, description:d.d( ‘description’ , t.e )
-		, implementation: d.d( ‘implementation’ , t.e )
-		, menu:m&& t.addMenu(m)
+	t.id=(t.createdTime=new Date()).getTime()
+	if(parent ){
+		if(!p.subtasks)
+			parent.subtasks=[]
+		parent.subtasks.push(t)	}
+	t.hde={ e:t.e = d.d(s || 'ttl'
+			,parent?.hde?.subtasks || 
+				parent ?.e || p )
+		, subtasks :d.d( 'subtasks' , t.e )
+		, description:d.d( 'description' , t.e )
+		, implementation: d.d( 'implementation' , t.e )
+		, menu:m&& t.createMenu(m,t.e)
 		} // hde
  } // constructor
 
-initRoot(){
-	const t=this.root=this
+ initRoot(){
+	const t=Node.root=this
 	,b=document.body
 	
 	return b
 	}
 
-	toJsonString(){}
+ toJsonString(){}
 
- addMenu(menuItems) {
+ createMenu(menuItems,parent){
+	//4 cases: case1: menuItems is only a string
+	//	case2: array of string items //if(typeof menuItems == 'string' )
+	//	case3: array of arrays	,recursively call createMenu on each sub-array
+	//	case4: array of 2 items ,1string & 1func ==> a button with a label and a callback
+	const t=this
+	,d=Node.dom
+	,p=parent?.hde?.menu || parent?.e || parent
+	,n=menuItems?.length
+	,label=menuItems[0]
+	if(n==2 && typeof menuItems[1]=='function')
+		return d.createButton(label,evt=>(menuItems[1])(t,evt),p)
+	const hde=d.d(label,p),ul=n>1 && d.c('ul',hde)
+	for(let i=1;i<n;i++){
+		const item=menuItems[i];
+		if(Array.isArray(item))
+			t.createMenu(item,ul)
+		else 
+			d.c('li',ul,{textContent:item})}
+	return hde;
+/*
+ addMenu(menuItems,parent) {
 	const d=Node.dom,t=this
-	,details = d.c('details', t.e )
-	, summary = d.c('summary', details
-		, { textContent: 'Menu' })
-
-	const ul = d.c('ul', details);
-	menuItems.forEach(item => {
+	,details = d.c('details', parent||t.e )
+	, summary= d.c('summary', details, { textContent: 
+		(menuItems&&menuItems[0])||'Menu' })
+	,n=menuItems?.length
+	, ul = a1&& d.c('ul', details);
+	a1?.forEach(item => {
 		if (typeof item === 'string')
 			d.c('li', ul, { textContent: item })
 		else if (Array.isArray(item)) {
-			const [label, children, callbackOrObjDef] = item
+			const [label, cco] = item // cco::=children_or_callback_or_objDef
 			, li = d.c('li', ul)
-			, subDetails = d.c('details', li)
+			,typ =typeof cco
+			,func= typ=== 'function' && cco
+			if(func)
+				return d.createButton(label, e=>func(t,e), li)
+			const a=Array.isArray(cco)&& cco
+			,subDetails = d.c('details', li)
 			d.c('summary', subDetails, { textContent: label })
-			if (callbackOrObjDef) {
-				if (typeof callbackOrObjDef === 'function')
-					d.createButton('Run', callbackOrObjDef, subDetails)
-				else
-					t.addChild(callbackOrObjDef, subDetails)
-			}
-			if (children)
-				t.addMenu(children, subDetails)
+			if (a)
+				t.addMenu(a, subDetails)
+			else if (cco)
+				t.addChild(cco, subDetails)
 		} else
 			t.addChild(item, ul)
 	})
  }
+*/
 
- addChild(objDef) {return new Node(this, objDef)}// ,parent = this.div
+ } // createMenu
+
+ addChild(objDef) {
+	const t=this,n= new Node(t, objDef)// ,parent = this.div
+	//if(!t.subtasks)t.subtasks=[]t.subtasks.push(n)
+ return}
 
  static dom = {
   c: function createElement(tagName, parent, atrb, chldrn,chldr2) {
@@ -72,66 +105,64 @@ initRoot(){
 	}//Node.dom.c
 
  , atrb: function setAttributesAndProps(elem, atrbs) {
-	Object.keys(atrbs).forEach(
-	k => k == 'classList'
-	? elem[k].add(atrbs[k])
-	: k != 'style' ? elem[k] = atrbs[k])
-	: Object.keys(atrbs[k]).forEach(j => elem.style[j] = atrbs[k][j]) }
+	Object.keys(atrbs).forEach(k => k == 'classList'
+		? elem[k].add(atrbs[k])
+		: k != 'style' ? (elem[k] = atrbs[k])
+		: Object.keys(atrbs[k]).forEach(j => elem.style[j] = atrbs[k][j])) }
 
 , createButton: (label, onClick, parent) => Node.dom.c(
 	'button', parent, { textContent: label, onclick: onClick })
 
-,fs:(title,parent,chldrn)=>Node.dom.c(‘fieldset’,parent,0
-	,Node.dom.c(‘legend’,0,{textContent:title}),chldrn)
+,fs:(title,parent,chldrn)=>Node.dom.c('fieldset',parent,0
+	,Node.dom.c('legend',0,{textContent:title}),chldrn)
 
-,d:(title,parent,children)=>Node.dom.c(‘details’,parent,0
-	,Node.dom.c(‘summary’,0,{textContent:title}),chldrn)
+,d:(title,parent,chldrn)=>Node.dom.c('details',parent,0
+	,Node.dom.c('summary',0,{textContent:title}),chldrn)
  } // static dom
 
- static MenuItems=[
-	[‘Clipboard menu’,[
-		‘Duplicate’
-		,’Cut’
-		,’Paste as subtasks’
-		,[’Multi-select’,[
-			‘Add to multi-select’
-			,’Remove from multi-select’]]
-		,[‘Position’,[
-			’Reset’
-			,’Set’
-			,’Drag’]]
-		,[‘Json’,[
-			‘toJsonString’
-			,’New subtasks from json’
-			,’Textarea’]]
-	] // Clipboard
-	,[’New Subtask’,0,function(node){
-		const d=Node.dom,
-		if()
-		}]
-	,[‘Appearance menu’,[
-		[‘Border’,[
-			‘Background color‘
-			,’Stroke color’
-			,’Stroke width’
-			,’Corners radius’]]
-		,[‘Text’,[
-			‘Color’
-			,’Font’
-			,’Size’]]
-	] // Appearance
-	,[‘Description menu’,[
-		‘Add description text’
-		,’Set description category’
-		,’Add link’
-		,’Set desc location’]]
-	,[‘Implementation modules menu’,[
-		‘Add source code module’
-		,’Delete module’
-		,’Set programming language of module’
-		,’Set tech stack’]]
+ static MenuItems=['Menu',
+	['Clipboard menu',
+		'Duplicate'
+		,'Cut'
+		,'Paste as subtasks'
+		,['Multi-select',
+			'Add to multi-select'
+			,'Remove from multi-select']
+		,['Position',
+			'Reset'
+			,'Set'
+			,'Drag']
+		,['Json',
+			'toJsonString'
+			,'New subtasks from json'
+			,'Textarea']
+	 ] // Clipboard
+	,['New Subtask',node=>node.addChild({title:new Date()})]
+	,['Appearance menu',
+		['Border',
+			'Background color'
+			,'Stroke color'
+			,'Stroke width'
+			,'Corners radius']
+		,['Text',
+			'Color'
+			,'Font'
+			,'Size']
+	 ] // Appearance
+	,['Description menu',
+		'Add description text'
+		,'Set description category'
+		,'Add link'
+		,'Set desc location']
+	,['Implementation modules menu',
+		'Add source code module'
+		,'Delete module'
+		,'Set programming language of module'
+		,'Set tech stack']
  ] // MenuItems
 
-static root=onload=new Node()
+static root=0
+static onLoad=onload=()=>new Node()
 } // class Node
+
 </script>
