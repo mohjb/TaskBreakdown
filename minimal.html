@@ -1,6 +1,41 @@
 <script>
 class Node {
  constructor(parent, objDef) {
+	const t= this	, d=Node.dom // TODO: should move most of the constructor code to method reset()
+	, p=t.parent = (parent || (!Node.root&&t.initRoot()))
+	, a= (Array .isArray(objDef ) && objDef ) || Node.MenuItems // (!Node.root&&Node.MenuItems)
+	, s= (typeof(objDef) =='string' && objDef)|| objDef?.title ||(t==Node.root&&'Root')//|| (a&&a[0])
+	, m=objDef?.menu || a//&&a [1]
+	t.objDef = objDef || a
+	t.id=(t.createdTime=new Date()).getTime()
+	if(parent ){
+		if(!p.subtasks)
+			parent.subtasks=[]
+		parent.subtasks.push(t)	}
+	const p2=parent?.elems?.subtasks || parent ?.e || p
+	t.elems={ e: d.c('fieldset', p2 ,{classList:'node'})}
+	t.elems.eLegend=d.c('legend',t.elems.e,0
+		,[t.elems.label=d.c('span',t.elems.e
+			,{textContent:t.label=s || 'ttl'
+			, contentEditable:true
+			, input:e=>t.onChng('label',t.elems.label.textContent)
+			})
+		//, t.elems.description=d.d( 'description' , t.elems.e )
+		//, t.elems.implementation= d.d( 'implementation' , t.elems.e )
+		, t.elems.menu=m&& t.createMenu(m,t.elems.e)
+		])
+	t.elems. subtasks =d.c( 'fieldset' , t.elems.e ,0,d.c('legend',0
+		,{textContent:'subtasks'}
+		,d.c('button',0,{textContent:'+',onclick:
+			e=>t.onChng('createSubtask',t.createChild({title:prompt('please enter name of new subTask','Task: '+new Date())}))
+		})))
+	t.elems.label.addEventListener('input',
+		e=>t.onChng('label',t.elems.label.textContent)
+	
+	)
+ } // constructor
+
+reset(parent, objDef) {
 	const t= this	, d=Node.dom 
 	, p=t.parent = (parent || (!Node.root&&t.initRoot()))
 	, a= (Array .isArray(objDef ) && objDef ) || Node.MenuItems // (!Node.root&&Node.MenuItems)
@@ -12,15 +47,29 @@ class Node {
 		if(!p.subtasks)
 			parent.subtasks=[]
 		parent.subtasks.push(t)	}
-	t.hde={ e:t.e = d.fs(s || 'ttl'
-			,parent?.hde?.subtasks || 
-				parent ?.e || p )
-		, subtasks :d.fs( 'subtasks' , t.e )
-		, description:d.fs( 'description' , t.e )
-		, implementation: d.fs( 'implementation' , t.e )
-		, menu:m&& t.createMenu(m,t.e)
-		} // hde
- } // constructor
+	const p2=parent?.elems?.subtasks || parent ?.e || p
+	t.elems={ e: d.c('fieldset', p2 ,{classList:'node'})}
+	t.elems.eLegend=d.c('legend',t.elems.e,0
+		,[t.elems.label=d.c('span',t.elems.e
+			,{textContent:t.label=s || 'ttl'
+			, contentEditable:true
+			, input:e=>t.onChng('label',t.elems.label.textContent)
+			})
+		//, t.elems.description=d.d( 'description' , t.elems.e )
+		//, t.elems.implementation= d.d( 'implementation' , t.elems.e )
+		, t.elems.menu=m&& t.createMenu(m,t.elems.e)
+		])
+	t.elems. subtasks =d.c( 'fieldset' , t.elems.e ,0,d.c('legend',0
+		,{textContent:'subtasks'}
+		,d.c('button',0,{textContent:'+',onclick:
+			e=>t.onChng('createSubtask',t.createChild({title:prompt('please enter name of new subTask','Task: '+new Date())}))
+		})))
+	t.elems.label.addEventListener('input',
+		e=>t.onChng('label',t.elems.label.textContent)
+	
+	)
+	
+ } // reset
 
  initRoot(){
 	const t=Node.root=this
@@ -29,7 +78,16 @@ class Node {
 	return b
 	}
 
- toJsonString(){}
+ onChng(propName,propVal){
+	//if(propName type isnt const)
+	this[propName]=propVal
+	console.log('Node.onChng',this,propName,propVal)
+	}
+
+ toJsonString(){
+	const j={},t=this
+	Node.JsonPropNames.forEach(a=>j[a[0]]=t[a[0]])
+	return JSON.stringify(j)}
 
  createMenu(menuItems,parent){
 	//4 cases: case1: menuItems is only a string
@@ -38,61 +96,46 @@ class Node {
 	//	case4: array of 2 items ,1string & 1func ==> a button with a label and a callback
 	const t=this
 	,d=Node.dom
-	,p=parent?.hde?.menu || parent?.e || parent
+	,p=parent?.elems?.menu || parent?.e || parent
 	,n=menuItems?.length
 	,label=menuItems[0]
 	if(n==2 && typeof menuItems[1]=='function')
 		return d.createButton(label,evt=>(menuItems[1])(t,evt),p)
-	const hde=d.d(label,p),ul=n>1 && d.c('ul',hde)
+	const hde=d.d({textContent:label,style:{'font-size':6}},p)
+	,ul=n>1 && d.c('ul',hde)
 	for(let i=1;i<n;i++){
 		const item=menuItems[i];
 		if(Array.isArray(item))
 			t.createMenu(item,ul)
-		else 
-			d.c('li',ul,{textContent:item})}
+		else if(typeof(item)=='string')
+			d.c('li',ul,{textContent:item})
+		else{d.c(item.elemName|| item.n || 'li',ul,item)
+			/*
+			hde.addEventListener("toggle", (event) => {
+				if (hde.open) {
+					// the html-details-element(hde) was toggled open 
+				} else {
+					// the html-details-element(hde) was toggled closed 
+				}
+			})*/
+		}
+	}
 	return hde;
-/*
- addMenu(menuItems,parent) {
-	const d=Node.dom,t=this
-	,details = d.c('details', parent||t.e )
-	, summary= d.c('summary', details, { textContent: 
-		(menuItems&&menuItems[0])||'Menu' })
-	,n=menuItems?.length
-	, ul = a1&& d.c('ul', details);
-	a1?.forEach(item => {
-		if (typeof item === 'string')
-			d.c('li', ul, { textContent: item })
-		else if (Array.isArray(item)) {
-			const [label, cco] = item // cco::=children_or_callback_or_objDef
-			, li = d.c('li', ul)
-			,typ =typeof cco
-			,func= typ=== 'function' && cco
-			if(func)
-				return d.createButton(label, e=>func(t,e), li)
-			const a=Array.isArray(cco)&& cco
-			,subDetails = d.c('details', li)
-			d.c('summary', subDetails, { textContent: label })
-			if (a)
-				t.addMenu(a, subDetails)
-			else if (cco)
-				t.addChild(cco, subDetails)
-		} else
-			t.addChild(item, ul)
-	})
- }
-*/
-
  } // createMenu
 
- addChild(objDef) {
+ createChild(objDef) {
 	const t=this,n= new Node(t, objDef)// ,parent = this.div
 	//if(!t.subtasks)t.subtasks=[]t.subtasks.push(n)
  return}
 
+ createDesc(){
+	const t=this,d=Node.dom, // TODO: implementation
+	} // createDesc
+
  static dom = {
-  c: function createElement(tagName, parent, atrb, chldrn,chldr2) {
-	const e = tagName?.nodeType ? tagName
-		: document.createElement(tagName), d = Node.dom
+  c: function createElement(elemName, parent, atrb, chldrn,chldr2) {
+	const e = elemName?.nodeType ? elemName
+		: document.createElement(elemName), d = Node.dom
 	if (atrb) d.atrb(e, atrb)
 	if (chldrn) chldrn?.forEach
 		? chldrn.forEach(c => d.c(c?.n || c, e, c?.atrb, c?.chldrn))
@@ -105,8 +148,26 @@ class Node {
 	}//Node.dom.c
 
  , atrb: function setAttributesAndProps(elem, atrbs) {
+ /*sets attributes on element-elem from properties(name/value) of object parameter-atrbs,
+
+ property-names that have special behaviour(classList, style, on), 
+ 
+ classList is either a string or an array 
+ (currently only string is implemented, adds a css class name to the elem)
+
+ "style" is expected to be an object 
+ and the properties are css properties set on elem.style
+
+ "on" is expected to be an object 
+ and the properties (values)are event-handlers ,
+ set using elem.addEventListener 
+ where the property name is the name of the event 
+ and the property value is expected to be a function
+
+ */
 	Object.keys(atrbs).forEach(k => k == 'classList'
 		? elem[k].add(atrbs[k])
+		:k=='on'? Object.keys(atrbs.on).forEach(evtNm => elem.addEventListener(evtNm, atrbs.on[evtNm] ))
 		: k != 'style' ? (elem[k] = atrbs[k])
 		: Object.keys(atrbs[k]).forEach(j => elem.style[j] = atrbs[k][j])) }
 
@@ -116,10 +177,18 @@ class Node {
 ,fs:(title,parent,chldrn)=>Node.dom.c('fieldset',parent,0
 	,Node.dom.c('legend',0,{textContent:title}),chldrn)
 
-,d:(title,parent,chldrn)=>Node.dom.c('details',parent,0
-	,Node.dom.c('summary',0,{textContent:title}),chldrn)
+,d:(title_orSummaryAttribs,parent,chldrn,hdeAtrbs)=>Node.dom.c('details',parent,hdeAtrbs
+	,Node.dom.c('summary',0
+	,typeof(title_orSummaryAttribs)=='string'?{textContent:title_orSummaryAttribs}:title_orSummaryAttribs)
+	,chldrn)
  } // static dom
 
+ static JsonPropNames=[['id','const']
+	,['label','string']
+	,['subtasks','ref:id']
+	,['descriptions','[string]']
+	,['Appearance','[string]']
+	,['modules','[string]']]
  static MenuItems=['Menu',
 	['Clipboard menu',
 		'Duplicate'
@@ -137,7 +206,7 @@ class Node {
 			,'New subtasks from json'
 			,'Textarea']
 	 ] // Clipboard
-	,['New Subtask',node=>node.addChild({title:new Date()})]
+	,['New Subtask',node=>node.createChild({title:new Date()})]
 	,['Appearance menu',
 		['Border',
 			'Background color'
@@ -150,7 +219,7 @@ class Node {
 			,'Size']
 	 ] // Appearance
 	,['Description menu',
-		'Add description text'
+		['Add description text',node=>node.newDesc()]
 		,'Set description category'
 		,'Add link'
 		,'Set desc location']
@@ -161,8 +230,28 @@ class Node {
 		,'Set tech stack']
  ] // MenuItems
 
+loadFromJson(js){
+	//TODO: set this
+	const t=this,j=JSON.parse(js)
+	Object.keys(j).forEach(k=>t[k]=
+		k!='subtasks'?j[k]
+		:Array.isArray(j[k])?j[k].map(i=>i // TODO: need cache ,name/value pairs items are: id and task/node
+			)
+		:j[k]
+		)
+	}
+
 static root=0
 static onLoad=onload=()=>new Node()
+static storage={
+save:function(){localStorage.rootTask=Node.root.toJsonString()}
+load:function(){
+	try{const s=localStorage.rootTask
+	,j=JSON.parse(s)
+	Node.root.reset().loadFromJson(j);
+	}catch(ex){}}
+}//static storage
+
 } // class Node
 
 </script>
@@ -179,8 +268,10 @@ static onLoad=onload=()=>new Node()
 		border:1px solid blue;
 		border-radius:5px;
 		padding:5px;
-		margin:15px;
-		background-color: #a0d3ff57;}
+		margin:2px;
+		background-color: #a0d3ff57;
+		/*float: left;*/
+		}
 details{display:inline}
 
 	summary,legend{
@@ -189,6 +280,6 @@ details{display:inline}
 		margin-top: 0px;
 		margin-left: 0px;
 	}
-	
-</style>
+.node{border:3px solid black;margin: 30px;}
 
+</style>
