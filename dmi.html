@@ -6,7 +6,7 @@ elems={e:0
 	,header:0
 	,libs:{e:0,list:0}
 	,vars:{e:0,list:0}
-	,intr:{e:0,list:0} // introspection ,contentWrapper:0
+	,intr:{e:0,list:0} // introspection
 }//elems
 
 constructor(name, content, options = {}) {
@@ -20,7 +20,7 @@ constructor(name, content, options = {}) {
 		t : name,
 		content : content,
 		...options}
-	t.bld()//,t.options
+	t.bld()
 }
 
 bld(){
@@ -213,42 +213,6 @@ setIntrospectionElem(e){}
 		,p4=p2 || p3
 		,p5=e.appendChild( p4 )
 		return p5}
-/*
-	for(let i=0;i<2;i++){
-		if (chldrn){
-			(chldrn?.forEach)
-			? (
-				chldrn.forEach(
-					c => c
-					 &&(
-					  d.c(
-						( c.nodeType ? c 
-							: (c?.n 
-								|| c?.tagName
-								||  (	(typeof(c)=='string')
-										?d.t(c)
-										:c
-									)
-							  )
-						)
-						, e
-						, c?.atrb
-						, c?.chldrn
-					  )
-					 )
-					)
-			  )
-			: (
-				e.appendChild(
-					chldrn?.nodeType 
-					? chldrn 
-					: d.t(chldrn)
-				)
-			  )
-		}
-	 chldrn=chldr2
-	}
-*/
  }//f0
 
 	f0(e,chldrn)
@@ -387,48 +351,6 @@ setIntrospectionElem(e){}
 
  "chldrn" , array or obj or string
  */
-	/*const d=DW.dom
-	Object.keys(atrbs).forEach(k => k=='chldrn'
-		?( atrbs[k]?.forEach
-			?atrbs[k].forEach(
-				c=>d.c(c?.tagName ||c.n
-						||(c.clk&&'button')//||'span'
-					,elem
-					,(typeof(c)=='string')
-						?{t:c}
-						:c
-				)
-			 )
-			:d.c(atrbs[k]?.tagName ||atrb[k].n||(
-					atrb[k].clk &&'button'
-				 )//||'span'
-				,elem,atrbs[k]
-			 )
-		 )
-		:k=='t'?(elem.textContent=atrbs.t)
-		//:k=='menu'?d.createMenu(atrbs[k],elem)
-		:k == 'classList'? (Array.isArray(atrbs[k])
-			?atrbs[k].forEach(j=>elem[k].add(atrbs[k][j]))
-			:elem[k].add(atrbs[k]))
-		:k=='on'? Object.keys(atrbs.on).forEach(
-			evtNm => evtNm!='bld'?
-				d.ael(elem,evtNm, atrbs.on[evtNm] )
-				:console.log('DW.dom.atrb:on:bld:'
-					,elem,atrbs,
-					(typeof(atrbs.on.bld)=='function'
-					 ? atrbs?.on?.bld(elem,atrbs)
-					 : atrbs?.on?.bld
-					)
-				 )
-			)
-		//:k=='window'?d.createWindow(elem)
-		:k=='makeDraggable'?d.makeDraggable(elem)
-		:k != 'style' ? (elem[k] = atrbs[k])
-		: Object.keys(atrbs[k]).forEach(
-			j => elem.style[j] = atrbs[k][j]
-		  )
-	 )
- */
  
  }// atrb: function setAttributesAndProps
 
@@ -437,37 +359,7 @@ setIntrospectionElem(e){}
 	if(p?.appendChild)p.appendChild(t)
 	return t}
 ,ael:(a,e,l)=>a.addEventListener(e,l)
-/*, createMenu:(menuItem,parent)=>{
-	const d=DW.dom
-	,p=parent?.elems?.menu || parent?.e || parent
-	,a=menuItem.items
-	,n=a?.length	//,label=menuItem[0]
-	const hde=(typeof (menuItem?.clk||menuItem)=='function')
-	?d.btn(menuItem.title || menuItem.clk
-		,evt=>(menuItem.clk)(t,item,evt),p)
-	:menuItem.tagName?d.c(menuItem.tagName,p
-		,Object.assign({t:menuItem.title||menuItem},menuItem.atrb))
-	:d.d(Object.assign({t:menuItem.title||menuItem
-		,classList:['DW','menuItem']},menuItem.atrb),p)
-	,ul=n>0 && d.c('ul',hde)
-	for(let i=0;i<n;i++){
-		const item=a[i];
-		if(typeof(item)=='string' && !item?.clk)
-			d.c('li',ul,{t:item})
-		else
-			d.createMenu(item,ul)
-	}
-	return hde;
- } // createMenu
 
-,btn:(label, onClick, parent) => DW.dom.c(
-	'button', parent, { t: label, on:{click: onClick }})
-
- ,bld:function(o,p){
-	const d=DW.dom
-	console.warn('DW.dom.bld: not implemented')
-	}
-	*/
  ,log:(msg,r,a,b,c)=>{console.log(msg,r,a,b,c);return r;}
  ,fs:(title,parent,chldrn,fsAtrbs,lAtrbs
 	)=>DW.dom.c(
@@ -541,35 +433,7 @@ setIntrospectionElem(e){}
         w.style.left = newX + 'px';
         w.style.top = newY + 'px';
     })
-	/*
-	document.addEventListener('pointermove', (e) => { // Use pointermove
-		if (!isDragging) return;
-		e.preventDefault();
-		const newX = e.clientX + offsetX;
-		const newY = e.clientY + offsetY;
-		w.style.left = newX + 'px';
-		w.style.top = newY + 'px';
-	});
-	/*
-	h.addEventListener('mousedown', (e) => {
-	isDragging = true;
-	offsetX = w.offsetLeft - e.clientX;
-	offsetY = w.offsetTop - e.clientY;
-	});
-	document.addEventListener('mouseup', (e) => {
-	if (isDragging)
-		isDragging = false;
-	});
 
-	document.addEventListener('mousemove', (e) => {
-		if (!isDragging) return;
-		e.preventDefault();
-		const newX = e.clientX + offsetX;
-		const newY = e.clientY + offsetY;
-		w.style.left = newX + 'px';
-		w.style.top = newY + 'px';
-	});
-	*/
 	return elem}//dom.makeDraggable
 
  ,makeResizable: (elem, e) => {
@@ -966,38 +830,6 @@ bld(){
 							,'or']))
 					])
 				])
-
-			/* was in the DW head
-			,{ n:'details' // tmplt
-			  ,style:{display:'inline-flex',padding:'5px',border:'1px black solid'}
-			  ,chldrn:[
-				{ n:'summary',t:'tmplt'}
-				,{t:'new'
-					,n:'button',on:{click:(e,o)=>console.log('Tmplt.bld:contentWrapper: chldrn:tmplt.new:',e,t)}}
-				,{t:'duplicate'
-					,n:'button',on:{click:(e,o)=>console.log('Tmplt.bld:contentWrapper: chldrn:tmplt.duplicate:',e,t)}}
-				,{ n:'details' // parts
-					,style:{display:'inline-flex',padding:'5px',border:'1px black solid'}
-					,chldrn:[
-						 {t:'parts',n:'summary'}
-						,{t:'new'
-							,n:'button',on:{click:(e,o)=>console.log('Tmplt.bld:contentWrapper: chldrn:tmplt.part.new:',e,t)}}// html-inpTagName // html-predef
-					]}
-				,{ n:'details' // json
-					,style:{display:'inline-flex',padding:'5px',border:'1px black solid'}
-					,chldrn:[
-						 {t:'json',n:'summary'}
-						,{t:'toStr'
-							,n:'button',on:{click:(e,o)=>console.log('Tmplt.bld:contentWrapper: chldrn:tmplt.json.toStr:',e,t)}}
-						,{t:'fromStr'
-							,n:'button',on:{click:(e,o)=>console.log('Tmplt.bld:contentWrapper: chldrn:tmplt.json.fromStr:',e,t)}}
-					]}
-				,{t:'expr.new'
-					,n:'button',on:{click:(e,o)=>console.log('Tmplt.bld:contentWrapper: chldrn:tmplt.expr.new:',e,t)}}// var2htmlTextNode, if, loop //,inp-var-bind , select-options-bind
-				]
-			}//tmplt */
-
-			
 			
 		 ])// toolbar
 		,{t:'params',chldrn:[
@@ -1218,8 +1050,7 @@ onload=e=> myWindow = new DW(
 }
 
 body { /* .draggable*/
-  pointer-events: all ; /* :all
-		:auto ;llow the element to be dragged */
+  pointer-events: all ; /* :auto ;llow the element to be dragged */
   /*cursor: grab; /* Optional: Add a visual cue that the element is draggable */
 }
 
@@ -1233,53 +1064,6 @@ details{
 	background-color: #0d8bf91c;
 	border-style: double;
 }
-
-/*
-
-details {
-  border: 1px solid #ccc; /* Light border around the details element * /
-  padding: 10px;
-  margin-bottom: 10px; /* Space between details elements * /
-  border-radius: 5px; /* Slightly rounded corners * /
-}
-
-summary {
-  /* list-style: none; /* Remove default marker * /
-  cursor: pointer; /* Indicate it's clickable * /
-  font-weight: bold; /* Make the summary text bold * /
-  padding: 5px 10px; /* Add some padding * /
-  border: 1px solid #ccc; /* Border for the summary * /
-  border-radius: 5px; /* Rounded corners for the summary * /
-  background-color: #f0f0f0; /* Light gray background * /
-  margin-bottom: -1px; /* Adjust spacing to connect with content * /
-  position: relative; /* For positioning the marker * /
-}
-
-/*summary::marker { /* For modern browsers that support ::marker * /
-  display: none; /* Hide the default marker * /
-}* /
-
-summary::before { /* Custom marker (plus sign) * /
-  content: "+";  /* Or use a different character like "►" * /
-  position: absolute;
-  left: 5px;
-}
-
-details[open] summary::before { /* Change marker when open * /
-    content: "−"; /* Or a different character like "▼" * /
-}
-
-details > *:not(summary) { /* Style the content within details * /
-  padding: 10px;
-  border-top: 1px solid #ccc;  /* Add a top border to separate content * /
-  margin-top: 0; /* Remove default top margin of the details content * /
-}
-
-/* Optional: Style the open state differently * /
-details[open] summary {
-  background-color: #e0e0e0; /* Slightly darker background when open * /
-}
-*/
 
 summary{
 	border-radius: 2px;
@@ -1325,7 +1109,6 @@ color: #60aef3;
 }
 
 .tmplt-border-legend{
-	
 }
 
 </style>)
