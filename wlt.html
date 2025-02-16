@@ -1,1 +1,182 @@
-.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Window with Pointer Events</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+
+    .window {
+      position: absolute;
+      width: 300px;
+      height: 200px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .handle {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: #ddd;
+      cursor: pointer;
+    }
+
+    .move-handle {
+      top: 0;
+      left: 0;
+    }
+
+    .resize-handle {
+      bottom: 0;
+      right: 0;
+      cursor: se-resize;
+    }
+
+    .toolbar-handle {
+      top: 0;
+      right: 0;
+      cursor: pointer;
+    }
+
+    .toolbar {
+      position: absolute;
+      top: 20px;
+      right: 0;
+      width: 100px;
+      background-color: #eee;
+      border: 1px solid #ccc;
+      display: none;
+      flex-direction: column;
+      padding: 5px;
+    }
+
+    .toolbar button {
+      margin: 2px 0;
+      padding: 5px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+
+    .toolbar button:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    class CustomWindow {
+      constructor() {
+        // Create the window element
+        this.window = document.createElement('div');
+        this.window.classList.add('window');
+        document.body.appendChild(this.window);
+
+        // Add move handle (top-left)
+        this.moveHandle = document.createElement('div');
+        this.moveHandle.classList.add('handle', 'move-handle');
+        this.window.appendChild(this.moveHandle);
+
+        // Add resize handle (bottom-right)
+        this.resizeHandle = document.createElement('div');
+        this.resizeHandle.classList.add('handle', 'resize-handle');
+        this.window.appendChild(this.resizeHandle);
+
+        // Add toolbar handle (top-right)
+        this.toolbarHandle = document.createElement('div');
+        this.toolbarHandle.classList.add('handle', 'toolbar-handle');
+        this.window.appendChild(this.toolbarHandle);
+
+        // Add toolbar
+        this.toolbar = document.createElement('div');
+        this.toolbar.classList.add('toolbar');
+        this.toolbar.innerHTML = `
+          <button>Option 1</button>
+          <button>Option 2</button>
+          <button>Option 3</button>
+        `;
+        this.window.appendChild(this.toolbar);
+
+        // Event listeners
+        this.setupMoveHandle();
+        this.setupResizeHandle();
+        this.setupToolbarHandle();
+      }
+
+      setupMoveHandle() {
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        this.moveHandle.addEventListener('pointerdown', (e) => {
+          isDragging = true;
+          this.window.setPointerCapture(e.pointerId); // Capture pointer
+          offsetX = e.clientX - this.window.offsetLeft;
+          offsetY = e.clientY - this.window.offsetTop;
+        });
+
+        this.window.addEventListener('pointermove', (e) => {
+          if (isDragging) {
+            this.window.style.left = `${e.clientX - offsetX}px`;
+            this.window.style.top = `${e.clientY - offsetY}px`;
+          }
+        });
+
+        this.window.addEventListener('pointerup', () => {
+          isDragging = false;
+          this.window.releasePointerCapture(e.pointerId); // Release pointer
+        });
+      }
+
+      setupResizeHandle() {
+        let isResizing = false;
+        let startWidth, startHeight, startX, startY;
+
+        this.resizeHandle.addEventListener('pointerdown', (e) => {
+          isResizing = true;
+          this.window.setPointerCapture(e.pointerId); // Capture pointer
+          startWidth = this.window.offsetWidth;
+          startHeight = this.window.offsetHeight;
+          startX = e.clientX;
+          startY = e.clientY;
+        });
+
+        this.window.addEventListener('pointermove', (e) => {
+          if (isResizing) {
+            const newWidth = startWidth + (e.clientX - startX);
+            const newHeight = startHeight + (e.clientY - startY);
+            this.window.style.width = `${newWidth}px`;
+            this.window.style.height = `${newHeight}px`;
+          }
+        });
+
+        this.window.addEventListener('pointerup', () => {
+          isResizing = false;
+          this.window.releasePointerCapture(e.pointerId); // Release pointer
+        });
+      }
+
+      setupToolbarHandle() {
+        this.toolbarHandle.addEventListener('pointerdown', (e) => {
+          e.stopPropagation(); // Prevent triggering move/resize
+          this.toolbar.style.display = this.toolbar.style.display === 'flex' ? 'none' : 'flex';
+        });
+      }
+    }
+
+    // Create a new custom window
+    const customWindow = new CustomWindow();
+  </script>
+</body>
+</html>
