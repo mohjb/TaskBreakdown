@@ -1,182 +1,1081 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Custom Window with Pointer Events</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #f0f0f0;
-    }
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CustomWindow with Pointer Events ,by mohjb</title>
 
-    .window {
-      position: absolute;
-      width: 300px;
-      height: 200px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-    }
+<script>
+ class CW {
+ static rootWin=null
+//rootLib=new Lib('rootLib')
+elems={e:0
+,handles:{move:0,resize:0,toolbar:0}
+	,libs:0//{e:0,list:0}
+	,vars:{e:0,list:0}
+	,intr:{e:0,list:0} // introspection ,contentWrapper:0
+}//elems
 
-    .handle {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      background-color: #ddd;
-      cursor: pointer;
-    }
+  constructor() {
+	if(!CW.rootWin)CW.rootWin=this
+	this.bld()}
+  bld(){
+	const t=this,d=CW.dom
+	,e=t.elems,h=e.handles
+	// Create the window element
+	,w=e.e= d.c('div',document.body
+		,{classList:'window',style:{
+			left  : '7px'
+			,top  : '4px'
+			,width: '613px'
+			,height:'366px'}})
+	// Add move handle (top-left)
+	h.move = d.c('div',w,{classList:['handle', 'move-handle']});
 
-    .move-handle {
-      top: 0;
-      left: 0;
-    }
+	// Add resize handle (bottom-right)
+	h.resize = d.c('div',w,{classList:['handle', 'resize-handle']})
 
-    .resize-handle {
-      bottom: 0;
-      right: 0;
-      cursor: se-resize;
-    }
+	// Add toolbar handle (top-right)
+	h.toolbar = d.c('div',w,{classList:['handle', 'toolbar-handle']})
 
-    .toolbar-handle {
-      top: 0;
-      right: 0;
-      cursor: pointer;
-    }
+	// Add toolbar
+	e.toolbar = d.c('div',w,{
+	classList:'toolbar'
+	,style:{overflow:'auto'}
+	//,innerHTML : '          <button>Option 1</button>          <button>Option 2</button>          <button>Option 3</button>'
+	,chldrn:[
+		 { n:'details' // win
+		  ,style:{display:'inline-flex',padding:'5px',border:'1px black solid'}
+		  ,chldrn:[
+			{ n:'summary',t:'win'}
+			,{t:'min','data-obj':{ref:t,clss:'CW'}
+				,clk:(e,o)=>console.log('CW.dom.createWindow:contentWrapper: chldrn:win.min:',e,t)}
+			
+			,{t:'title.edit' ,'data-obj':{ref:t,clss:'CW'}
+				,n:'button',on:{click:(e,o)=>console.log('CW.dom.createWindow:contentWrapper: chldrn:win.title.edit:',e,t)}}
+			,{t:'duplicate' ,'data-obj':{ref:t,clss:'CW'}
+				,n:'button',on:{click:(e,o)=>console.log('CW.dom.createWindow:contentWrapper: chldrn:win.duplicate:',e,t)}}
+			,{t:'new','data-obj':{ref:t,clss:'CW'}
+				,n:'button',on:{click:(e,o)=>console.log('CW.dom.createWindow:contentWrapper: chldrn:win.new:',e,t)}}
+			,{//'mode'
+				n:'fieldset'
+				,'data-obj':{ref:t,clss:'CW'}
+				,style:{display:'inline'},chldrn:[
+					{n:'legend',t:'mode'}
+					,{n:'select'
+						,'data-obj':{ref:t,clss:'CW'}
+						,chldrn:[
+							{n:'option',t:'win'}
+							,{n:'option',t:'docl'}
+						]}
+				]}
+			,{//content.mode
+				n:'fieldset',style:{display:'inline'}
+				,'data-obj':{ref:t,clss:'CW'}
+				,chldrn:[
+					{n:'legend',t:'content.mode'}
+					,{n:'select'
+						,'data-obj':{ref:t,clss:'CW'}
+						,chldrn:[
+							{n:'option',t:'cursor-editing'}
+							,{n:'option',t:'preview'}
+							,{n:'option',t:'expr(fs,d)'}
+							,{n:'option',t:'json-txtCode'}
+							,{n:'option',t:'html-txtCode'}
+						]}
+				]}
+		 ]}
+		,{ n:'details' // elem-path
+			  ,style:{display:'inline-flex',padding:'5px',border:'1px black solid'}
+			  ,chldrn:[
+				{ n:'summary',t:'path'}
+				
+				,{//parents
+					n:'fieldset',style:{display:'inline'},chldrn:[
+						{n:'legend',t:'parents'}
+						,
+					]}
+				,{//children
+					n:'fieldset',style:{display:'inline'},chldrn:[
+						{n:'legend',t:'children'}
+						,
+					]}
+				,{//content.mode
+					n:'fieldset',style:{display:'inline'},chldrn:[
+						{n:'legend',t:'content.mode'}
+						,{n:'select'
+							,chldrn:[
+								{n:'option',t:'cursor-editing'}
+								,{n:'option',t:'preview'}
+								,{n:'option',t:'expr(fs,d)'}
+								,{n:'option',t:'json-txtCode'}
+								,{n:'option',t:'html-txtCode'}
+							]}
+					]}
+			]} // elem-path
+	]});
 
-    .toolbar {
-      position: absolute;
-      top: 20px;
-      right: 0;
-      width: 100px;
-      background-color: #eee;
-      border: 1px solid #ccc;
-      display: none;
-      flex-direction: column;
-      padding: 5px;
-    }
+	// Event listeners
+	t.setupMoveHandle();
+	t.setupResizeHandle();
+	t.setupToolbarHandle();
 
-    .toolbar button {
-      margin: 2px 0;
-      padding: 5px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      cursor: pointer;
-    }
+	t.rootLib=new Lib('rootLib',t)
+  }// CW.bld
 
-    .toolbar button:hover {
-      background-color: #ddd;
-    }
-  </style>
+  setupMoveHandle() {
+	const t=this,d=CW.dom 
+	,e=t.elems,w=e.e
+	,h=e.handles
+	let isDragging = false;
+	let offsetX, offsetY;
+
+	d.ael(h.move,'pointerdown', e => {
+	  isDragging = true;
+	  w.setPointerCapture(e.pointerId); // Capture pointer
+	  offsetX = e.clientX - w.offsetLeft;
+	  offsetY = e.clientY - w.offsetTop;
+	})
+
+	d.ael(w,'pointermove', e => {
+	  if (isDragging) {
+		w.style.left = `${e.clientX - offsetX}px`;
+		w.style.top = `${e.clientY - offsetY}px`;
+	  }
+	});
+
+	d.ael(w,'pointerup', e => {
+	  isDragging = false;
+	  w.releasePointerCapture(e.pointerId); // Release pointer
+	});
+  }
+
+  setupResizeHandle() {
+	const t=this,d=CW.dom
+	,e=t.elems,w=e.e
+	
+	let isResizing = false;
+	let startWidth, startHeight, startX, startY;
+
+	d.ael(e.handles.resize,'pointerdown', e => {
+	  isResizing = true;
+	  w.setPointerCapture(e.pointerId); // Capture pointer
+	  startWidth = w.offsetWidth;
+	  startHeight = w.offsetHeight;
+	  startX = e.clientX;
+	  startY = e.clientY;
+	});
+
+	d.ael(w,'pointermove', e => {
+	  if (isResizing) {
+		const newWidth = startWidth + (e.clientX - startX);
+		const newHeight = startHeight + (e.clientY - startY);
+		w.style.width = `${newWidth}px`;
+		w.style.height = `${newHeight}px`;
+	  }
+	});
+
+	d.ael(w,'pointerup', e => {
+	  isResizing = false;
+	  w.releasePointerCapture(e.pointerId); // Release pointer
+	});
+  }
+
+  setupToolbarHandle() {
+	const t=this,d=CW.dom
+	,e=t.elems
+	,w=t.e,eh=e.handles
+	,ht=eh.toolbar
+	,tb=e.toolbar
+	,ts=tb.style
+	d.ael(ht,'pointerdown', e => {
+	  e.stopPropagation(); // Prevent triggering move/resize
+	  ts.display = ts.display === 'flex' ? 'none' : 'flex';
+	});
+  }
+
+
+
+ static dom = {
+  c: function createElement(tagName, parent, atrb, chldrn,chldr2) {/*
+	tagName can be 1 of 3: string, html-element-reference, or an object (instead of atrb-obj)*/
+	const d = CW.dom
+	if(!atrb && (typeof(tagName)!='string') && !tagName?.nodeType)
+		atrb= tagName
+	else if(! tagName)
+		tagName=atrb.tagName||atrb.n ||
+		 (atrb?.clk&&'button')||d.log('CW.dom.c:not tag:1:tagName=','span')
+	if( typeof(atrb?.clk)=='function'){
+		tagName=tagName?.tag|| atrb.tagName || atrb.n ||'button';
+		if(!atrb.on)
+			atrb.on={}
+		if(!atrb.on.click)
+			atrb.on.click=atrb.clk
+	}
+	if( (!tagName)
+		||(
+			(!(tagName?.nodeType))
+			&&  (
+					typeof(tagName)!='string'
+				)
+		  )
+	 )
+		tagName=(atrb?.clk&&'button')||d.log('CW.dom.c:not tag:tagName=','span')
+
+	//if((typeof(tagName)=='string')||tagName?.nodeType){
+	const e = tagName?.nodeType 
+			? tagName
+			: document.createElement(tagName)
+	if (atrb) 
+		d.atrb(e, atrb)
+ function f0(e,chldrn){
+	let r=null
+	if(chldrn)
+		r=f2(chldrn)
+	if(chldr2)
+		r=f2(chldr2)
+	return r;
+
+	function f2(chldrn){
+		let r=null
+		if(chldrn?.forEach)
+			r=f3(chldrn)
+		else
+			r=f6(chldrn)
+		return r
+	}//f2
+
+	function f3(chldrn){
+		return chldrn.map(f4)
+	}
+
+	function f4(c,ci){
+		if(c)
+			return f5(c,ci)
+	}
+
+	function f5(c,ci){
+		const p1=c.nodeType && c
+		,p1_2= (!p1) && c?.n
+		,p1_3= (!p1_2) && c?.tagName
+		,p1_4= (!p1_3) && (typeof(c)=='string')
+		,p1_5= p1_4 && d.t(c)
+		,p1_6= (!p1_5) && c
+		,p2=e
+		,p3=c?.atrb
+		,p4=c?.chldrn
+		,p0=d.c(p1_6,p2,p3,p4)
+		return p0;
+	}
+
+	function f6(chldrn){
+		const p1=chldrn?.nodeType 
+		,p2=p1 && chldrn
+		,p3=(!p1) && d.t(chldrn)
+		,p4=p2 || p3
+		,p5=e.appendChild( p4 )
+		return p5}
+ }//f0
+
+	f0(e,chldrn)
+	if( parent?.elems?.e )
+		parent = parent.elems?.e
+	if (parent?.appendChild && 
+		parent.nodeType!=Node.TEXT_NODE 
+	 )
+		parent.appendChild(e)
+	return e // }else CW.dom.bld(tagName,parent)
+ }//CW.dom.c
+
+ , atrb: function setAttributesAndProps(elem, atrbs) {
+	const d=CW.dom
+	,ak=Object.keys(atrbs)
+	if(elem && ak)
+		return f0(elem,ak)
+
+	function f0(){
+		return ak.map(fSwitch)
+	}//f0
+
+	function fSwitch(k){
+		let r=null;const v=atrbs[k]
+		switch(k){
+			case 'chldrn':
+				r=faChldrn(v);break;
+			case 't':
+				r=elem.textContent=v;break;
+			case 'classList':
+				r=faClss(elem[k],v);break;
+			case 'on':
+				r=faOn(v);break;
+			case 'makeDraggable':
+				r=d.makeDraggable(elem,v);break;
+			default:
+				if(k != 'style' )
+					r=(k != 'tagName')&&( elem[k=='clk'?'click':k] = v)
+				else 
+					r=fStyl(v)
+		}
+		return r
+	}//fSwitch
+
+	function fStyl(v){
+		function fs2(j){
+			return elem.style[j] = v[j]
+		}//f2_2
+		const a=Object.keys(v)
+		,b=a.map(fs2)
+		return b
+	}//fStyl
+
+	function faChldrn(v){
+		let r=null
+
+		if(v?.map)
+			r= v.map(f1)
+		else 
+			r=f2(v)
+		return r;
+
+		function f1(c){
+			const p11=c?.tagName
+			,p12= p11 ||c.n
+			,p1= p12 ||(c.clk&&'button')
+			,p2=elem
+			,p30=typeof(c)=='string'
+			,p31=p30 && ({t:c})
+			,p3= p31 || c
+			,r=d.c(p1,p2,p3)
+			;
+			return r
+		}//f1
+
+		function f2(v){
+			const p10=v?.tagName 
+			,p11=p10|| v?.n
+			,p12=v?.clk
+			,p13=p12 && 'button'
+			,p1=p11 || p13
+			,p2=elem
+			,r=d.c(p1,p2,v);
+			return r;
+		}//f2
+
+	}//faChldrn
+
+	function faClss(o,v){
+		const r=(Array.isArray(v)
+			?v.forEach(j=>o.add(j))
+			:o.add(v))
+		return r;
+	}//faClss
+
+	function faOn(v){
+		const k=Object.keys(v)
+		,r=k.map(faOn0)
+		return r;
+		function faOn0(evtNm){
+			if(evtNm!='bld')
+				faOn1(evtNm)
+			else
+				faOnBld(evtNm)
+		}
+		function faOn1(evtNm){
+			const p=v[evtNm]
+			return d.ael(elem,evtNm, p )}
+		function faOnBld(evtNm){
+			const b=v.bld
+			,bt=typeof(b)
+			,b0=bt=='function'
+			,b1=b0 && b(elem,atrbs)
+			,r= b0 && b1 || b
+			console.log('CW.dom.atrb:on:bld:'
+				,elem,atrbs,r )
+			return r;
+		} // faOnBld
+	} // faOn
+/*sets attributes on 
+ element-elem from properties(name/value) of object parameter-atrbs,
+ and recursively create-elements with (the optional-property) atrbs.chldrn
+
+ property-names that have special behaviour(classList, style, on, chldrn, window,makeDraggable,clk), 
+ 
+ classList is either a string or an array 
+ ( adds a css class name to the elem)
+
+ "style" is expected to be an object 
+ and the properties are css properties set on elem.style
+
+ "on" is expected to be an object 
+ and the properties (values)are event-handlers ,
+ set using elem.addEventListener 
+ where the property name is the name of the event 
+ and the property value is expected to be a function
+
+ "chldrn" , array or obj or string
+ */
+	/*const d=CW.dom
+	Object.keys(atrbs).forEach(k => k=='chldrn'
+		?( atrbs[k]?.forEach
+			?atrbs[k].forEach(
+				c=>d.c(c?.tagName ||c.n
+						||(c.clk&&'button')//||'span'
+					,elem
+					,(typeof(c)=='string')
+						?{t:c}
+						:c
+				)
+			 )
+			:d.c(atrbs[k]?.tagName ||atrb[k].n||(
+					atrb[k].clk &&'button'
+				 )//||'span'
+				,elem,atrbs[k]
+			 )
+		 )
+		:k=='t'?(elem.textContent=atrbs.t)
+		//:k=='menu'?d.createMenu(atrbs[k],elem)
+		:k == 'classList'? (Array.isArray(atrbs[k])
+			?atrbs[k].forEach(j=>elem[k].add(atrbs[k][j]))
+			:elem[k].add(atrbs[k]))
+		:k=='on'? Object.keys(atrbs.on).forEach(
+			evtNm => evtNm!='bld'?
+				d.ael(elem,evtNm, atrbs.on[evtNm] )
+				:console.log('CW.dom.atrb:on:bld:'
+					,elem,atrbs,
+					(typeof(atrbs.on.bld)=='function'
+					 ? atrbs?.on?.bld(elem,atrbs)
+					 : atrbs?.on?.bld
+					)
+				 )
+			)
+		//:k=='window'?d.createWindow(elem)
+		:k=='makeDraggable'?d.makeDraggable(elem)
+		:k != 'style' ? (elem[k] = atrbs[k])
+		: Object.keys(atrbs[k]).forEach(
+			j => elem.style[j] = atrbs[k][j]
+		  )
+	 )
+ */
+ 
+ }// atrb: function setAttributesAndProps
+
+,t:(t,p)=>{
+	t=document.createTextNode(t)
+	if(p?.appendChild)p.appendChild(t)
+	return t}
+,ael:(a,e,l)=>a.addEventListener(e,l)
+ ,log:(msg,r,a,b,c)=>{console.log(msg,r,a,b,c);return r;}
+ ,fs:(title,parent,chldrn,fsAtrbs,lAtrbs
+	)=>CW.dom.c(
+		'fieldset'
+		,parent
+		,fsAtrbs
+		,CW.dom.c(
+			'legend'
+			,0
+			,Object.assign({t:title},lAtrbs)
+		)
+		,chldrn
+	)
+
+ ,d:(title_orSummaryAttribs,parent,chldrn,hdeAtrbs
+	)=>CW.dom.c('details',parent,hdeAtrbs
+	 , CW.dom.c('summary',0
+		,(typeof(title_orSummaryAttribs)=='string')
+		 ?{t:title_orSummaryAttribs}
+		 :	 title_orSummaryAttribs
+	   )
+	 , chldrn)
+
+ ,btns:(msg,a,parent)=>a?.
+	map(
+		(b,i)=>CW.dom.c(
+			'button'
+			,parent
+			,{t:b
+				,clk:(e,o)=>CW.dom.log(
+					msg,b,i,e,o)
+			 }
+		)
+	)
+
+ } // static dom
+
+ // Create a new custom window
+ static onLoad=onload=()=>{
+		CW.customWindow = new CW();
+	}
+	 
+ }//class CW
+
+
+class Lib{
+	id=(new Date()).getTime();
+	name='LibFolder@'+this.id//(new Date()).getTime();
+	chldrn=[]
+	tmplts=[]
+	components=[]
+elems={e:0
+	,chldrn:0
+	,tmplts:0
+	,cmpnts:{e:0,list:0}}
+
+constructor(name,parent){
+	const t=this
+	if(!Lib.root)
+		Lib.root=t;
+	if(name)t.name=name;
+	(t.parent=parent)?.chldrn?.push(t)
+	t.bld()
+	if( Lib.root == t )
+		Lib.initFolders();
+ } // constructor
+
+
+ bld(){
+	const t=this,d=CW.dom
+	,toolbarMenu=d.d(
+	 {t:'toolbar',style:{display:'inline'}},0
+	  ,[
+		 {t:'new subLib',clk:(e,o)=>{
+			console.log('Lib.bld:sub-libs:new:clk',e,t)
+			const x=new Lib(0,t)
+		 }}
+		,Lib.root==t?0:{t:'delete',clk:(e,o)=>console.log(
+			'Lib:bld:delete:clk',e,t,o)}
+		,Lib.root==t?0:{t:'edit title',clk:(e,o)=>{
+			console.log('Lib:bld:edit title:clk',e,t)
+			const x=prompt('new name',t.name)
+			if(x)t.elems.e.firstChild.textContent=t.name=x
+			}}
+		,{t:'duplicate',clk:(e,o)=>console.log('Lib:bld:duplicate:clk',e,t)}
+		,{t:'toJson',clk:(e,o)=>console.log('Lib:bld:toJson:clk',e,t)}
+		,Lib.root==t?0:{t:'move to another lib-parent',clk:(e,o)=>console.log(
+		'Lib:bld:move to another lib-parent:clk',e,t)}
+	 ]
+	 ,{classList:'.lib-toolbar-d'
+	  ,on:{bld:
+			e=>console.log('Lib.bld:t(',t,
+			').elems.e:d.fs:lAtrb:chldrn:d.d toolbar:chldrn:on.bld:',e)
+		}
+	  }
+	 )//toolbar
+	if(!t.elems.e)
+	t.elems.e=d.fs(t.name ,t.parent?.elems?.chldrn ||t.parent
+		,[toolbarMenu
+			,,t.elems.chldrn=d.d({t:'sub-libs',style:{display:'inline'}},0,0,{style:{display:'contents'}})
+			,t.elems.tmplts=d.fs('tmplts'
+			,0//t.parent?.elems?.tmplts
+			,0,0
+			,{chldrn:[
+				{t:'new',clk:(e,o)=>{
+					console.log('Lib:bld:tmplts:new:clk',e,t)
+					const x=new Tmplt(t)
+				}
+			}]})
+			// ,d.d('components',0,[])
+		]
+		,{'data-Lib':t}
+	 //,{chldrn:toolbarMenu}
+	)//t.elems.e=d.fs
+ } // Lib.bld
+
+/** createLibs::=
+creates sub tree of children under this , takes string-parameter, newline seperated, each line will determine depth of nesting based on leading whitespace
+
+escape characters
+	//	comment-out remaining of line 
+	slash and astrick - and - astrick and slash	:	comments out multiline
+	@	line is splitBy @, a path(js-obj and array-item is property-name ) of references from Lib.root to a reference of this Lib on the current line
+	;	creates a Tmplt on a single-line ,parent of new tmplt is the previous line , an array1-of-strings is a split on semicolon and the 1st array1-item is a string that is split-on comma , and the 1st array2-item is the tmplt.name and the remainging items are 'prms' strings , as for the 1st-array1(splitBy ;) the remaining items are tmplt.parts
+	{	creates Tmplt under the lib of the previous line , the closing brae can span multiple lines, not yet implemented
+*/
+createLibs(str){
+	const t=this
+	,a=str?.split('\n')
+	,n=a?.length
+	,p=[t]
+	,b=[],bs='\\'
+	,lead0=lead(a[0])
+	let x=0	,name
+	if(isNaN(t.decendentIndex) || t.decendentIndex>=lead0-1)
+		t.decendentIndex=lead0-1
+	function lead(s){
+		const n=s?.length;//if(!s)s=a[o.i]
+		for(let i=0;i<n;i++)
+			if(s.charCodeAt(i)>=32)
+				return i;
+		return 0}//lead
+	for(let i=0;i<n;i++){
+		const line=a[i]
+		,iLead=lead(line);
+		let z,path=null;name=line.trim();
+		if((z=name.indexOf('//'))!=-1)
+			name=name.substring(0,z);
+		if((z=name.indexOf('/*'))!=-1){
+			name=name.substring(0,z);
+			while((z=a[i++]?.indexOf('*/'))==-1 && i<n);
+		}
+		if((z=name.indexOf('{' ))!=-1
+			|| (name.indexOf(';' )!=-1 )
+		 )
+			i=createTmplt(i,z,p[0])
+
+		if(name?.length >0){
+			while(p.length>1 && iLead<=p[0].decendentIndex)
+				p.shift() // array.shift removes at index 0
+			const prnt=p[0];console.debug('Lib.createLibs:for'
+				,i,' ,decendentIndex:',iLead,' ,parnt:',prnt,' ,line:',line)
+			if((z=name.split('@'))&& z.length>1){
+				name=z[0].trim()
+				path=[Lib.root]
+				z=z[1].split('.')
+				for(let i=0;i<z.length-1;i++){
+					const pn=z[i].trim()
+					let u=path[0][pn]
+					if(!u)
+						u=path[0][pn]={}
+					path.unshift(u)
+				}
+				path.unshift(z[z.length-1].trim())
+			}
+			b.push(x=new Lib(name,prnt))
+			p.unshift(x)  // array.unshift adds at index 0
+			x.decendentIndex=iLead
+			if(path)
+				p[1][p[0]]=x
+		}
+	}
+	return b
+  function createTmplt(i,z,lib){
+	/*
+	{
+	}
+		ends with 2 consequetive lines (empty,or lines with only whitespace/s)
+	*/
+	let x=0,z
+	const m=new Tmplt(lib)
+	if(name.indexOf(';' )!=-1){
+		z=name.split(';')
+		m.prms=z[0].split(',')
+			.filter((p,pi)=>pi==0?(m.name=p?.trim(),0):1 )
+			.map(p=>p?.trim())
+		m.parts=z.filter()
+			.map((p,pi)=>p.trim() )
+	}
+	return i;
+	function filterHd(p){
+	
+	}
+	function mapHd(p){
+	
+	}
+	function fltrPart(p,pi){
+	  return pi>0
+			&&p.trim()?.length>0 
+			&&( (m.prms.push(p))?0:0
+			)
+	}
+	function mapPart(p){
+	
+	}
+  }//function createTmplt
+
+} // createLibs
+
+static root=0
+static initFolders(){
+ const s=`dmi
+	Lib
+		toolbar
+	Tmplt
+		toolbar
+			
+		TmpltPartTyp@partTypes
+			static string
+			Expr
+	classes
+		TmpltPart
+		TmpltPartTyp
+		TmpltPrm
+		TmpltCall_SFrame
+		TypId
+		TypRef
+		TmpltVarProp
+
+proj-ideas
+	research
+		Nscript
+		Study source-code
+			cgminer
+			bitcoin
+			LuaProlog
+	portlet
+		web editor
+			Dawaer
+			palette
+		scafolding
+			schema editor
+				create entities
+					create fields 
+				create views / reports
+			Generator
+			server-side 
+				MySql management
+				File management
+				project structure
+			extensible template/generators
+				builtin templates 
+			extensible pallettes
+				builtin pallette components
+		CanDo
+			web
+			ThreeJs
+				ThreeJs environment
+				FSM
+			canvas
+			storage
+				multi-user
+			Blockly custom blocks
+				js lang constructs
+				lisp
+				xml/html
+				java
+				c
+				py
+				prolog
+				smalltalk
+		NG
+	apps
+		BTC Reseller
+		Asics
+		Gallery
+			Subscriptions
+			followup
+				profiles
+		ERP
+			Accounting
+			Queueing and appointments and allocation
+				clinic management webapp
+			NetSouq
+				auctioning
+				food-delivery system
+				menus and cats
+		schools model
+		ProjMan / taskMan
+		Public Opinion
+			haycalat ensan
+		relational calculator
+			social network meta-inf
+			conversation software
+		family tree
+	games
+		Twintris
+		Rainbow
+			fman editors
+				map ed
+				scenes relational-map
+				assets management
+		Spiderball
+		3d games
+			rts
+			tree branchs walking and building
+			space pipes / paths walking and building
+			tower defense
+			shooter
+				lastman standing
+				capture the flag
+				tag-team
+		cards
+			uno 
+			kout bo 6
+		educa games
+		Business gamification
+		School gamification
+		Music editor
+			Beat gamification
+		sakuban
+`
+ Lib.root.createLibs(s)
+}
+
+
+}//class Lib
+
+
+class Tmplt{
+	id=(new Date()).getTime();
+	name='tmplt@'+this.id;
+	parent=0	// parnt-tmplt
+	parts=[]	// tmplt-parts
+	prms=[]
+	
+elems={e:0
+	,toolbar:0
+	,prms:0 //list
+	,preview:0
+	,parts:0 // ,outline:0
+	,tmplt:0 // wysiwyg-ed
+}//elems
+
+	constructor(parent){
+		if( parent?.tmplts?.push )
+			parent.tmplts.push(this)
+		this.bld(this.parent=parent)} // constructor
+
+
+bld(){
+	const t=this
+	,d=CW.dom
+	,e=t.elems.e= d.d(
+	 t.name+'(class:Tmplt)'
+		,t.parent?.elems.tmplts || t.parent?.e 
+		,[//border,
+		 d.d('toolbar',0,[
+			,d.d('preview',0,[
+				{tagName:'button',t:'in new win'
+					,clk:(e,o)=>console.log(
+						'Tmplt.bld:preview:in new win:clk',e,t)
+					,on:{bld:(e,o)=>console.log(
+						'Tmplt.bld:preview:in new win:on.bld:',e,t)}
+				}
+				,{t:'last preview win'
+				 ,clk:(e,o)=>console.log('Tmplt.bld:preview:last preview win:clk',e,t)}
+				,{t:'main body'
+					,clk:(e,o)=>console.log('Tmplt.bld:preview:main body:clk',e,t)}
+				])
+			,{t:'select tmplt (should be in tmplt-list-item/s)'
+				,on:{
+					bld:e=>console.log('Tmplt.bld:selct:on.bld:',t,e)
+				 }
+				,clk:(e,o)=>console.log('Tmplt.bld:select tmplt:clk',e,t)}
+			,{t:'toJson (select tmplt)'
+				,clk:(e,o)=>console.log('Tmplt.bld:toJson:clk',e,t)}
+			,{t:'fromJson (select tmplt)'
+				,clk:(e,o)=>console.log('Tmplt.bld:fromJson:clk',e,t)}
+			,d.d('addPart (select tmplt)',0
+				,[{t:'static string'
+					,clk:(e,o)=>console.log('Tmplt.bld:addPart:static string:clk',e,t)}
+					,d.d('expr',0,[
+						 d.d('controlFlow',0,d.btns('Tmplt.bld:toolbar:addPart:expr:CntrlFlow:',['if','for'
+							,'loop','eval','try','return'
+							,'await','async','promise']))
+						,d.d('prop',0,d.btns('Tmplt.bld:toolbar:addPart:expr:prop:',['ref'
+							,'get','set','rem','keys','proto']))
+						,d.d('classReference',0,d.btns('Tmplt.bld:toolbar:addPart:expr:clssRef:',[
+							 'Object'
+							,'Array'
+							,'Function'
+							,'String'
+							,'Number'
+							,'Math'
+							,'DW'
+							,'Lib'
+							,'Tmplt']))
+						,d.d('new instanciation',0,d.btns('Tmplt.bld:toolbar:addPart:expr:new:',['obj'
+							,'Arr'
+							,'Num'
+							,'Str']))
+						,d.d('misc',0,d.btns('Tmplt.bld:toolbar:addPart:expr:misc:',[
+							'callFun'
+							,'typeof'
+							,'instanceof']))
+						,d.d('global',0,d.btns('Tmplt.bld:toolbar:addPart:expr:global:',[
+							 'null'
+							,'globalThis'
+							,'doc'
+							,'win'
+							,'boolTrue'
+							,'boolFalse']))
+						,d.d('numerical',0,d.btns('Tmplt.bld:toolbar:addPart:expr:num:',[
+							 'Addition'
+							,'Subtraction'
+							,'Multiplication'
+							,'Division'
+							,'Modulus'
+							,'LessThan'
+							,'GreaterThan'
+							,'LessThanOrEqual'
+							,'GreaterThanOrEqual'
+							,'ShiftLeft'
+							,'ShiftRight'
+							,'toFixed'
+							,'ToString','parse']))
+						,d.d('bitwise',0,d.btns('Tmplt.bld:toolbar:addPart:expr:bitwise:',[
+							 'and'
+							,'Or'
+							,'Not'
+							,'Xor']))
+						,d.d('truthy',0,d.btns('Tmplt.bld:toolbar:addPart:expr:truthy:',[
+							 'not'
+							,'equalTo'
+							,'NotEqual'
+							,'and'
+							,'or']))
+					])
+				])
+		 ])// toolbar
+		,{t:'params',chldrn:[
+			 {t:'new param',clk:p=>0}
+			,t.elems.prms=d.fs('list',0,[ ])//list
+		 ]} // params
+		,t.elems.parts=d.fs('parts',0,0,0,{chldrn:[
+			{t:'new',clk:(e,o)=>{
+					console.log('Tmplt:bld:parts:new:clk',e,t)
+					//const x=new TmpltPart(t,'str')
+				}
+			}]}
+		 ) // parts
+		,{t:'data'}
+		,{t:'preview'}
+	],{'data-Tmplt':t}) // e d.d
+
+} // bld
+
+
+}//class Tmplt
+
+
+  </script>
+
+<style>
+	body {
+		margin: 0;
+		padding: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		height: 100vh;
+		background-color: #f0f0f0;
+	}
+
+	.window {
+		position: absolute;
+		width: 300px;
+		height: 200px;
+		background-color: #fff;
+		border: 1px solid #ccc;
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+		overflow: hidden;
+		padding-top: 20px;
+		overflow: auto;
+	}
+
+	.handle {
+		position: absolute;
+		width: 50px;
+		height: 20px;
+		background-color: #ddd;
+		cursor: pointer;
+	}
+
+	.move-handle {
+		top: 0;
+		left: 0;
+	}
+
+	.resize-handle {
+		bottom: 0;
+		right: 0;
+		cursor: se-resize;
+	}
+
+	.toolbar-handle {
+		top: 0;
+		right: 0;
+		cursor: pointer;
+	}
+
+	.toolbar {
+		position: absolute;
+		top: 20px;
+		right: 0;
+		width: 50%;
+		background-color: #eee;
+		border: 1px solid #ccc;
+		display: none;
+		flex-direction: column;
+		padding: 5px;
+	}
+
+	.toolbar button {
+		margin: 2px 0;
+		padding: 5px;
+		background-color: #fff;
+		border: 1px solid #ccc;
+		cursor: pointer;
+	}
+
+	.toolbar button:hover {
+		background-color: #ddd;
+	}
+
+ details{
+	display: inline-flex;
+	padding: 0px;
+	border-radius: 6px;
+	border-width: 3px;
+	border-color: #03155eb3;
+	margin: 7px;
+	background-color: #0d8bf91c;
+	border-style: double;
+}
+
+ summary{
+	border-radius: 2px;
+	padding: 0px;
+	margin: -5px /*-11*/;
+	border: 3px solid;
+	background-color: #0038765e;
+	color: #fdfdfdf2;
+	border-color: #0571d087;
+	border-style: double;
+	border-width: thick;
+	position:relative/*display: inline-flex;*/;
+ }
+
+ summary::before { /* Custom marker (plus sign) */
+	content: "+";	/* Or use a different character like "►" */
+	position: absolute;
+	left: 5px;
+ }
+
+ details[open] summary::before { /* Change marker when open */
+	content: "−"; /* Or a different character like "▼" */
+ }
+
+ details > *:not(summary) { /* Style the content within details */
+	/* padding: 10px; */
+	border-top: 1px solid #ccc;	/* Add a top border to separate content */
+	margin-top: 0; /* Remove default top margin of the details content */
+	}
+
+ details[open] summary {
+	background-color: #3548a3b0; /* Slightly darker background when open */
+ }
+
+ fieldset{border-color: #b4b8cb;border-radius: 6px;color: #60aef3;margin-top: 15px;}
+
+ .tmplt-border{ }
+
+ .tmplt-border-legend{ }
+
+ .tmplt-toolbar-legend{ }
+
+ .lib-toolbar-d{}
+
+ .lib-subdir-d{}
+
+ button{
+	padding: 1px;
+	margin: 1px;
+	border-radius: 3px;
+ }
+
+</style>
+
 </head>
 <body>
-  <script>
-    class CustomWindow {
-      constructor() {
-        // Create the window element
-        this.window = document.createElement('div');
-        this.window.classList.add('window');
-        document.body.appendChild(this.window);
 
-        // Add move handle (top-left)
-        this.moveHandle = document.createElement('div');
-        this.moveHandle.classList.add('handle', 'move-handle');
-        this.window.appendChild(this.moveHandle);
-
-        // Add resize handle (bottom-right)
-        this.resizeHandle = document.createElement('div');
-        this.resizeHandle.classList.add('handle', 'resize-handle');
-        this.window.appendChild(this.resizeHandle);
-
-        // Add toolbar handle (top-right)
-        this.toolbarHandle = document.createElement('div');
-        this.toolbarHandle.classList.add('handle', 'toolbar-handle');
-        this.window.appendChild(this.toolbarHandle);
-
-        // Add toolbar
-        this.toolbar = document.createElement('div');
-        this.toolbar.classList.add('toolbar');
-        this.toolbar.innerHTML = `
-          <button>Option 1</button>
-          <button>Option 2</button>
-          <button>Option 3</button>
-        `;
-        this.window.appendChild(this.toolbar);
-
-        // Event listeners
-        this.setupMoveHandle();
-        this.setupResizeHandle();
-        this.setupToolbarHandle();
-      }
-
-      setupMoveHandle() {
-        let isDragging = false;
-        let offsetX, offsetY;
-
-        this.moveHandle.addEventListener('pointerdown', (e) => {
-          isDragging = true;
-          this.window.setPointerCapture(e.pointerId); // Capture pointer
-          offsetX = e.clientX - this.window.offsetLeft;
-          offsetY = e.clientY - this.window.offsetTop;
-        });
-
-        this.window.addEventListener('pointermove', (e) => {
-          if (isDragging) {
-            this.window.style.left = `${e.clientX - offsetX}px`;
-            this.window.style.top = `${e.clientY - offsetY}px`;
-          }
-        });
-
-        this.window.addEventListener('pointerup', () => {
-          isDragging = false;
-          this.window.releasePointerCapture(e.pointerId); // Release pointer
-        });
-      }
-
-      setupResizeHandle() {
-        let isResizing = false;
-        let startWidth, startHeight, startX, startY;
-
-        this.resizeHandle.addEventListener('pointerdown', (e) => {
-          isResizing = true;
-          this.window.setPointerCapture(e.pointerId); // Capture pointer
-          startWidth = this.window.offsetWidth;
-          startHeight = this.window.offsetHeight;
-          startX = e.clientX;
-          startY = e.clientY;
-        });
-
-        this.window.addEventListener('pointermove', (e) => {
-          if (isResizing) {
-            const newWidth = startWidth + (e.clientX - startX);
-            const newHeight = startHeight + (e.clientY - startY);
-            this.window.style.width = `${newWidth}px`;
-            this.window.style.height = `${newHeight}px`;
-          }
-        });
-
-        this.window.addEventListener('pointerup', () => {
-          isResizing = false;
-          this.window.releasePointerCapture(e.pointerId); // Release pointer
-        });
-      }
-
-      setupToolbarHandle() {
-        this.toolbarHandle.addEventListener('pointerdown', (e) => {
-          e.stopPropagation(); // Prevent triggering move/resize
-          this.toolbar.style.display = this.toolbar.style.display === 'flex' ? 'none' : 'flex';
-        });
-      }
-    }
-
-    // Create a new custom window
-    const customWindow = new CustomWindow();
-  </script>
 </body>
 </html>
