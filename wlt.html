@@ -506,6 +506,10 @@ elems={e:0
 		CW.customWindow = new CW();
 	}
 	 
+
+/*
+
+*/
  }//class CW
 
 
@@ -800,124 +804,123 @@ proj-ideas
 }
 
 /*
-The provided document is a JavaScript class definition for a custom window (`CW`) that can be created and manipulated within a web page. Below is a breakdown of the key components and functionality of the class:
+ defines a JavaScript class named `Lib`, which is designed to manage a hierarchical structure of libraries, templates, and components. Below is a detailed breakdown of the class and its functionality:
 
 ---
 
-### **Class `CW` Overview**
-The `CW` class is designed to create a draggable, resizable window with a toolbar and handles for moving, resizing, and interacting with the window. It also includes methods for setting up event listeners and managing the window's elements.
+### **Class `Lib` Overview**
+The `Lib` class represents a library or folder that can contain sub-libraries, templates, and components. It provides methods for creating and managing these elements, as well as building a user interface for interacting with them.
 
 ---
 
 ### **Key Properties**
-1. **Static Properties**
-   - `rootWin`: A static property to store the root window instance.
-   - `dom`: A static object containing utility methods for DOM manipulation (e.g., creating elements, setting attributes, adding event listeners).
+1. **Instance Properties**
+   - `id`: A unique identifier for the library, generated using the current timestamp.
+   - `name`: The name of the library, defaulting to `LibFolder@` followed by the `id`.
+   - `chldrn`: An array to store child libraries.
+   - `tmplts`: An array to store templates.
+   - `components`: An array to store components.
+   - `elems`: An object storing references to DOM elements for the library, including:
+     - `e`: The main library element.
+     - `chldrn`: The element for child libraries.
+     - `tmplts`: The element for templates.
+     - `cmpnts`: The element for components.
 
-2. **Instance Properties**
-   - `elems`: An object storing references to the window's elements, including:
-     - `e`: The main window element.
-     - `handles`: Elements for moving, resizing, and toolbar interaction.
-     - `toolbar`: The toolbar element.
-   - `rootLib`: A placeholder for a library instance (currently commented out).
+2. **Static Properties**
+   - `root`: A static property to store the root library instance.
 
 ---
 
 ### **Constructor**
-- The constructor initializes the window instance and calls the `bld` method to build the window's DOM structure.
-- If `CW.rootWin` is not set, it assigns the current instance to it.
+- Initializes a new `Lib` instance:
+  - Assigns a unique `id` and `name`.
+  - Sets the `root` instance if it doesn't already exist.
+  - Links the instance to its parent (if provided) by adding it to the parent's `chldrn` array.
+  - Calls the `bld` method to build the library's DOM structure.
+  - Calls `Lib.initFolders()` if the instance is the root library.
 
 ---
 
 ### **Methods**
 1. **`bld()`**
-   - Builds the window's DOM structure:
-     - Creates the main window element (`div`).
-     - Adds handles for moving, resizing, and toolbar interaction.
-     - Creates a toolbar with buttons and dropdowns for various actions (e.g., minimizing, editing, duplicating, creating new windows).
-     - Sets up event listeners for the handles.
+   - Builds the library's DOM structure:
+     - Creates a toolbar menu with options for creating sub-libraries, deleting, editing the title, duplicating, converting to JSON, and moving to another parent.
+     - Creates a `<details>` element for the library, containing:
+       - A toolbar menu.
+       - A section for child libraries (`sub-libs`).
+       - A section for templates (`tmplts`).
+     - Uses the `CW.dom` utility methods for DOM manipulation.
 
-2. **`setupMoveHandle()`**
-   - Enables dragging of the window using the move handle.
-   - Listens for `pointerdown`, `pointermove`, and `pointerup` events to update the window's position.
+2. **`createLibs(str)`**
+   - Creates a hierarchical structure of libraries and templates from a string input:
+     - Each line in the string represents a library or template.
+     - Indentation determines the nesting level.
+     - Special characters and syntax are used for additional functionality:
+       - `//`: Comments out the rest of the line.
+       - `/* ... */`: Comments out multiple lines.
+       - `@`: Specifies a path to reference another library.
+       - `;`: Creates a template.
+       - `{ ... }`: Creates a template with multiple parts (not fully implemented).
+   - Returns an array of created libraries.
 
-3. **`setupResizeHandle()`**
-   - Enables resizing of the window using the resize handle.
-   - Listens for `pointerdown`, `pointermove`, and `pointerup` events to update the window's dimensions.
+3. **`createTmplt(i, z, lib)`**
+   - A helper function for `createLibs` to create templates:
+     - Parses template parameters and parts from the input string.
+     - Currently, this function is incomplete and only handles basic cases.
 
-4. **`setupToolbarHandle()`**
-   - Toggles the visibility of the toolbar when the toolbar handle is clicked.
-
----
-
-### **Static `dom` Object**
-The `dom` object provides utility methods for DOM manipulation:
-1. **`c()` (Create Element)**
-   - Creates an element with specified attributes and children.
-   - Handles special cases for event listeners (`clk`), class lists, and child elements.
-
-2. **`atrb()` (Set Attributes and Properties)**
-   - Sets attributes and properties on an element.
-   - Handles special cases for `classList`, `style`, `on` (event listeners), and `chldrn` (child elements).
-
-3. **`t()` (Create Text Node)**
-   - Creates a text node and optionally appends it to a parent element.
-
-4. **`ael()` (Add Event Listener)**
-   - Adds an event listener to an element.
-
-5. **`log()` (Logging Utility)**
-   - Logs messages to the console for debugging.
-
-6. **`fs()` (Create Fieldset)**
-   - Creates a `<fieldset>` element with a `<legend>` and optional children.
-
-7. **`d()` (Create Details Element)**
-   - Creates a `<details>` element with a `<summary>` and optional children.
-
-8. **`btns()` (Create Buttons)**
-   - Creates multiple buttons with click event listeners.
+4. **`static initFolders()`**
+   - Initializes the root library with a predefined structure:
+     - Uses a multi-line string (`s`) to define the hierarchy of libraries and templates.
+     - Calls `createLibs` to build the structure.
 
 ---
 
-### **Static `onLoad` Method**
-- Initializes a new `CW` instance when the page loads, creating the custom window.
+### **Static `root` Property**
+- Stores the root instance of the `Lib` class.
+- Used to manage the top-level structure of libraries and templates.
 
 ---
 
 ### **Example Usage**
-When the page loads, the `CW.onLoad` method is triggered, creating a new `CW` instance. This results in:
-1. A draggable, resizable window being added to the page.
-2. A toolbar with buttons for various actions (e.g., minimizing, editing, duplicating).
-3. Handles for moving, resizing, and toggling the toolbar.
+When the `Lib` class is initialized:
+1. The root library is created.
+2. The `initFolders` method is called to populate the root library with a predefined structure of libraries and templates.
+3. The `createLibs` method parses the input string and creates the corresponding hierarchy.
 
 ---
 
 ### **Key Features**
-- **Draggable Window**: The window can be moved by dragging the move handle.
-- **Resizable Window**: The window can be resized by dragging the resize handle.
-- **Toolbar Interaction**: The toolbar can be toggled using the toolbar handle.
-- **Dynamic DOM Creation**: The `dom` utility methods simplify creating and manipulating DOM elements.
+- **Hierarchical Structure**: Libraries can contain sub-libraries, templates, and components.
+- **Dynamic DOM Creation**: The `bld` method uses `CW.dom` utilities to create and manage DOM elements.
+- **Toolbar Interaction**: Each library has a toolbar with options for managing its contents.
+- **String Parsing**: The `createLibs` method parses a string to create a nested structure of libraries and templates.
 
 ---
 
 ### **Potential Improvements**
-1. **Uncomment and Implement `rootLib`**:
-   - The `rootLib` property is currently commented out. It could be used to manage libraries or additional functionality.
+1. **Complete `createTmplt` Functionality**:
+   - Implement support for multi-line templates (`{ ... }`).
+   - Add validation and error handling for template parameters and parts.
 
-2. **Enhance Toolbar Functionality**:
-   - Add more buttons and dropdown options to the toolbar for additional features.
+2. **Enhance Toolbar Options**:
+   - Add more actions to the toolbar (e.g., exporting, importing, searching).
 
-3. **Improve Event Handling**:
-   - Add more event listeners for additional interactions (e.g., double-click to maximize, right-click for context menus).
+3. **Improve UI/UX**:
+   - Add styling to improve the appearance of libraries and templates.
+   - Implement drag-and-drop functionality for reordering libraries and templates.
 
-4. **Styling**:
-   - Add CSS styles to improve the appearance of the window and toolbar.
+4. **Expand Template Functionality**:
+   - Add support for more complex templates (e.g., with conditional logic, loops).
+
+5. **Error Handling**:
+   - Add error handling for invalid input strings in `createLibs`.
 
 ---
 
-This class provides a solid foundation for creating customizable, interactive windows in a web application.
+### **Conclusion**
+The `Lib` class provides a flexible and extensible framework for managing hierarchical libraries and templates. With further development, it could serve as the foundation for a powerful library management system in a web application.
 */
+
 }//class Lib
 
 
