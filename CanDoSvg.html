@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>SVG Group with Draggable Points</title>
+	<style>
+		svg {
+			border: 1px solid #000;
+		}
+		.drag-handle {
+			cursor: pointer;
+		}
+	</style>
+</head>
+<body>
+	<!-- svg id="svgCanvas" width="800" height="600"></svg -->
+
+<script>
+
+class Pt {
+  elems={e:0} // e is circle
+  constructor(parentGrp,  { cx,cy,title, color,onDragStart, onDrag, onDragEnd }) {
+	const t=t;
+	t.parentGrp = parentGrp;
+	t.title = title;
+	t.color = color;
+	t.cx=cx;t.cy=cy
+	t.onDragStart = onDragStart;
+	t.onDrag = onDrag;
+	t.onDragEnd = onDragEnd;
+	t.isDragging = false;
+	t.bld();
+	}
+
+ bld() {
+	const t=this
+		,d=Grp.dom
+		,e=t.elems
+		// Create the circle
+	e.e = d.c("circle",t.parentGrp.elems.e,{	r: 10
+		,cx:t.cx , cy:t.cy
+		,fill: t.color
+		,"class": "drag-handle"
+		,on:{
+
+		// Add event listeners for dragging
+		 mousedown: (e) => t.startDrag(e)
+		,mousemove: (e) => t.drag(e)
+		,mouseup: () => t.stopDrag()
+		} // on
+	}//atrbs
+	)
+ }//bld
+
+ startDrag(event) {
+	const t=this;
+	t.isDragging = true;
+	t.startX = event.clientX;
+	t.startY = event.clientY;
+	if (t.onDragStart) t.onDragStart(event);
+	}
+
+ drag(event) {
+	const t=this;
+	if (!t.isDragging) 
+		return;
+	const dx = event.clientX - t.startX;
+	const dy = event.clientY - t.startY;
+	t.startX = event.clientX;
+	t.startY = event.clientY;
+	if (t.onDrag) 
+		t.onDrag(dx, dy);
+	}
+
+ stopDrag() {
+	const t=this;
+	t.isDragging = false;
+	if (t.onDragEnd) 
+		t.onDragEnd();
+ }
+
+ } // class Pt
+
+class Grp {
+ static root=0;
+ transform={
+	translate:{x:0,y:0}
+	,scale:{x:1,y:1}
+	,rotate:0}
+ elems={e:0
+	,handles:{translate:0
+		,scale:0
+		,rotate:0}
+	}
+
+  constructor( x, y, width, height, title) {
+	const t=this
+		,f=t.transform
+		,ft=f.translate;
+	if(! Grp.root)
+		(Grp.root=t).init()
+	ft.x = x;
+	ft.y = y;
+	t.width = width;
+	t.height = height;
+	t.title = title;
+	t.bld();
+  }
+
+ init(){
+	const t=Grp.root=this,d=Grp.dom
+	t.svg=d.c('svg'
+		,document.body
+		,{width:'800',height:'600'})
+	}
+
+  bld() {
+	const t=this
+		,d=Grp.dom
+		,e=t.elems
+		,h=e.handles;
+		
+		// Create the group
+	e.group = d.c("g",Grp.root.svg,{"transform": t.trStr()}
+	 ,[//array of children
+		// Create the rectangle
+		e.rect = d.c("rect",0,{
+			width:t.width
+			,height: t.height
+			,fill: "lightblue"})
+
+		// Create the title text
+		,e.titleText = d.c( "text",0,{
+			 x: 10
+			,y: 20
+			,fill: "black"
+			,textContent : t.title})
+
+	// Create the translate handle
+	,h.translate = new Pt(t, 
+	 {cx:10,cy:t.height + 20
+		,title:"Translate", color:"blue"
+		,onDragStart: () => t.startTransform("translate")
+		,onDrag: (dx, dy) => t.translateGroup(dx, dy)
+		,onDragEnd: () => t.stopTransform()})
+
+	// Create the scale handle
+	,h.scale = new Pt(t
+	 ,{ cx:60 ,cy:t.height + 20 
+		,title:"Scale", color:"red"
+		,onDragStart: () => t.startTransform("scale")
+		,onDrag: (dx, dy) => t.scaleGroup(dx, dy)
+		,onDragEnd: () => t.stopTransform()
+	 })
+
+	// Create the rotate handle
+	,h.rotate = new Pt(t
+	 , { cx:110 ,cy:t.height + 20 
+		,title:"Rotate", color:"green"
+		,onDragStart: () => t.startTransform("rotate")
+		,onDrag: (dx, dy) => t.rotateGroup(dx, dy)
+		,onDragEnd: () => t.stopTransform()
+	})
+	])
+ }
+
+ startTransform(action) {
+	const t=this;t.currentAction = action;
+	t.startTransformState = t.elems.group.getAttribute("transform");
+ }
+
+ stopTransform() {
+	const t=this;t.currentAction = null;
+	t.startTransformState = null;
+ }
+
+ translateGroup(dx, dy) {
+	const t=this,f=t.transform,ft=f.translate;
+	//[_, tx, ty] = t.startTransformState.match(/translate\(([^,]+),([^)]+)\)/) || [0, t.x, t.y];const newX = parseFloat(tx) + dx;const newY = parseFloat(ty) + dy;
+	ft.x+=dx;ft.y+=dy;
+	t.elems.group.setAttribute("transform", t.tsStr() )
+  }
+
+ scaleGroup(dx, dy) {
+	//const scale = 1 + dx / 100;t.rect.setAttribute("width", t.width * scale);t.rect.setAttribute("height", t.height * scale);
+	const t=this,f=t.transform.scale;
+	f.x=f.x*(1+dx/100)
+	f.y=f.y*(1+dy/100)
+	t.elems.group.setAttribute("transform", t.tsStr() )
+ }
+
+ rotateGroup(dx, dy) {
+	//const angle   = (dx / 2) % 360 ;	const centerX = t.x + t.width  /2;const centerY = t.y + t.height /2;t.group.setAttribute("transform", `rotate(${angle}, ${centerX}, ${centerY})`);
+	const t=this,f=t.transform;
+	f.rotate+=dx;
+	t.elems.group.setAttribute("transform", t.tsStr() )
+ }
+
+ trStr(){
+	const f=
+		this.transform
+		,ft=f.translate
+		,fs=f.scale
+		,fr=f.rotate
+	,x=[]
+	if(fr.x!=0 || fr.y!=0)
+		x.push(`rotate(${fr.x}, ${fr.y})`);
+	if(fs!=1)
+		x.push(`scale(${fs})`);
+	if(ft.x!=0 || fr.y!=0)
+		x.push(`translate(${ft.x}, ${ft.y})`);
+	return x.join(',')
+	}
+
+ static dom = {
+  c: function createElement(tagName, parent, atrb, chldrn,chldr2) {
+	/*
+	tagName can be 1 of 3: string, html-element-reference, or an object (instead of atrb-obj)*/
+	const d = Grp.dom
+	if(!atrb && (typeof(tagName)!='string') && !tagName?.nodeType)
+		atrb= tagName
+	else if(! tagName)
+		tagName=atrb.tagName||atrb.n ||
+		 (atrb?.clk&&'button')||d.log('Grp.dom.c:not tag:1:tagName=','span')
+	if( typeof(atrb?.clk)=='function'){
+		tagName=tagName?.tag|| atrb.tagName || atrb.n ||'button';
+		if(!atrb.on)
+			atrb.on={}
+		if(!atrb.on.click)
+			atrb.on.click=atrb.clk
+	}
+	if( (!tagName)
+		||(
+			(!(tagName?.nodeType))
+			&&  (
+					typeof(tagName)!='string'
+				)
+		  )
+	 )
+		tagName=(atrb?.clk&&'button')||d.log('Grp.dom.c:not tag:tagName=','span')
+
+	const e = tagName?.nodeType 
+			? tagName
+			: (d.SvgNames.indexOf(tagName)!=-1
+			  ?document.createElementNS(d.NS, tagName)
+				:document.createElement(tagName))
+	if (atrb) 
+		d.atrb(e, atrb)
+ function f0(e,chldrn){
+	let r=null
+	if(chldrn)
+		r=f2(chldrn)
+	if(chldr2)
+		r=f2(chldr2)
+	return r;
+
+	function f2(chldrn){
+		let r=null
+		if(chldrn?.forEach)
+			r=f3(chldrn)
+		else
+			r=f6(chldrn)
+		return r
+	}//f2
+
+	function f3(chldrn){
+		return chldrn.map(f4)
+	}
+
+	function f4(c,ci){
+		if(c)
+			return f5(c,ci)
+	}
+
+	function f5(c,ci){
+		const p1=c.nodeType && c
+		,p1_2= (!p1) && c?.n
+		,p1_3= (!p1_2) && c?.tagName
+		,p1_4= (!p1_3) && (typeof(c)=='string')
+		,p1_5= p1_4 && d.t(c)
+		,p1_6= (!p1_5) && c
+		,p2=e
+		,p3=c?.atrb
+		,p4=c?.chldrn
+		,p0=d.c(p1_6,p2,p3,p4)
+		return p0;
+	}
+
+	function f6(chldrn){
+		const p1=chldrn?.nodeType 
+		,p2=p1 && chldrn
+		,p3=(!p1) && d.t(chldrn)
+		,p4=p2 || p3
+		,p5=e.appendChild( p4 )
+		return p5}
+ }//f0
+
+	f0(e,chldrn)
+	if( parent?.elems?.e )
+		parent = parent.elems?.e
+	if (parent?.appendChild && 
+		parent.nodeType!=Node.TEXT_NODE 
+	 )
+		parent.appendChild(e)
+	return e
+ }//Grp.dom.c
+
+ , atrb: function setAttributesAndProps(elem, atrbs) {
+	const d=Grp.dom
+	,ak=Object.keys(atrbs)
+	if(elem && ak)
+		return f0(elem,ak)
+
+	function f0(){
+		return ak.map(fSwitch)
+	}//f0
+
+	function fSwitch(k){
+		let r=null;const v=atrbs[k]
+		switch(k){
+			case 'chldrn':
+				r=faChldrn(v);break;
+			case 't':
+				r=elem.textContent=v;break;
+			case 'classList':
+				r=faClss(elem[k],v);break;
+			case 'style':
+				r=fStyl(v);break;
+			case 'on':
+				r=faOn(v);break;
+			case 'setRef':
+				r=t;
+				if(v?.obj && v.prop )
+					v.obj[v.prop]=elem
+				else if(v.parentElemProp && t?.parent?.elems)
+					t.parent.elems[v.parentElemProp]=elem
+				break;
+			default:
+				r=(k != 'tagName')&&( elem[k=='clk'?'click':k] = v)
+		}
+		return r
+	}//fSwitch
+
+	function fStyl(v){
+		function fs2(j){
+			return elem.style[j] = v[j]
+		}//f2_2
+		const a=Object.keys(v)
+		,b=a.map(fs2)
+		return b
+	}//fStyl
+
+	function faChldrn(v){
+		let r=null
+
+		if(v?.map)
+			r= v.map(f1)
+		else 
+			r=f2(v)
+		return r;
+
+		function f1(c){
+			const p11=c?.tagName
+			,p12= p11 ||c.n
+			,p1= p12 ||(c.clk&&'button')
+			,p2=elem
+			,p30=typeof(c)=='string'
+			,p31=p30 && ({t:c})
+			,p3= p31 || c
+			,r=d.c(p1,p2,p3)
+			;
+			return r
+		}//f1
+
+		function f2(v){
+			const p10=v?.tagName 
+			,p11=p10|| v?.n
+			,p12=v?.clk
+			,p13=p12 && 'button'
+			,p1=p11 || p13
+			,p2=elem
+			,r=d.c(p1,p2,v);
+			return r;
+		}//f2
+
+	}//faChldrn
+
+	function faClss(o,v){
+		const r=(Array.isArray(v)
+			?v.forEach(j=>o.add(j))
+			:o.add(v))
+		return r;
+	}//faClss
+
+	function faOn(v){
+		const k=Object.keys(v)
+		,r=k.map(faOn0)
+		return r;
+		function faOn0(evtNm){
+			if(evtNm!='bld')
+				faOn1(evtNm)
+			else
+				faOnBld(evtNm)
+		}
+		function faOn1(evtNm){
+			const p=v[evtNm]
+			return d.ael(elem,evtNm, p )}
+		function faOnBld(evtNm){
+			const b=v.bld
+			,bt=typeof(b)
+			,b0=bt=='function'
+			,b1=b0 && b(elem,atrbs)
+			,r= b0 && b1 || b
+			console.log('Grp.dom.atrb:on:bld:'
+				,elem,atrbs,r )
+			return r;
+		} // faOnBld
+	} // faOn
+/*sets attributes on 
+ element-elem from properties(name/value) of object parameter-atrbs,
+ and recursively create-elements with (the optional-property) atrbs.chldrn
+
+ property-names that have special behaviour(classList, style, on, chldrn, window,makeDraggable,clk), 
+ 
+ classList is either a string or an array 
+ ( adds a css class name to the elem)
+
+ "style" is expected to be an object 
+ and the properties are css properties set on elem.style
+
+ "on" is expected to be an object 
+ and the properties (values)are event-handlers ,
+ set using elem.addEventListener 
+ where the property name is the name of the event 
+ and the property value is expected to be a function
+
+ "chldrn" , array or obj or string
+ */
+ 
+ }// atrb: function setAttributesAndProps
+
+,t:(t,p)=>{
+	t=document.createTextNode(t)
+	if(p?.appendChild)p.appendChild(t)
+	return t}
+,ael:(a,e,l)=>a.addEventListener(e,l)
+ ,log:(msg,r,a,b,c)=>{console.log(msg,r,a,b,c);return r;}
+
+,NS:'http://www.w3.org/2000/svg'
+
+,SvgNames:['svg','g','rect','text','circle']
+
+ } // static dom
+
+	// Create an instance of Grp
+ static onLoad=onload=()=>new Grp( 100,100, 150,100, "My Rectangle")
+} // class Grp
+
+</script>
+</body>
+</html>
